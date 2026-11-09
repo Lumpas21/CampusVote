@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Elections - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap" style="padding:48px 0 80px">
+  <p class="eyebrow">Elections</p>
+  <h1 style="font-size:2.4rem;margin-bottom:8px">Your elections</h1>
+  <p class="subtitle">Elections for your college, program or section appear here once the election committee publishes them.</p>
+
+  {% if elections %}
+  <div style="display:grid;gap:16px">
+    {% for e in elections %}
+    <article class="card" style="padding:22px 26px">
+      <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center">
+        <div>
+          <h2 style="margin:0 0 6px;font-size:1.5rem">{{ e.title }}</h2>
+          <p class="muted" style="margin:0">
+            {{ e.scope_label or "All students" }} &middot; {{ e.type|replace("_", " ")|title }}
+            {% if e.voting_start and e.voting_end %}
+              &middot; Voting {{ e.voting_start|local_dt }} &ndash; {{ e.voting_end|local_dt }}
+            {% endif %}
+          </p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          {% set ph = election_phase(e) %}<span class="badge {{ 'ok' if ph in ('open', 'candidacy') else 'warn' }}">{{ phase_label(ph) }}</span>
+          {% if e.id in voted_ids %}
+            <a class="btn btn-sm" href="{{ url_for('main.vote_receipt', election_id=e.id) }}">View receipt</a>
+          {% elif ph == "open" %}
+            <a class="btn btn-sm" href="{{ url_for('main.vote_guidelines', election_id=e.id) }}">Vote</a>
+          {% else %}
+            <button class="btn btn-sm" type="button" disabled title="Voting is not open for this election">Vote</button>
+          {% endif %}
+          {% if e.id in results_ids %}<a class="btn btn-sm btn-ghost" href="{{ url_for('main.student_results', election_id=e.id) }}">Results</a>{% endif %}
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="padding:36px;text-align:center">
+    <h2 style="margin:0 0 8px">No elections yet</h2>
+    <p class="muted" style="margin:0">Nothing has been published for you. Check back later.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

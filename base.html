@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CampusVote{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {# Only show a menu link if its page exists, so one missing route can never break every page. #}
+  {% set eps = (request.url_rule.map.iter_rules() | map(attribute='endpoint') | list) if request.url_rule else none %}
+  {% set has_elections = eps is none or 'main.elections' in eps %}
+  {% set has_settings = eps is none or 'main.settings' in eps %}
+  {% block header %}
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand" href="{{ url_for('main.index') }}">CampusVote</a>
+      <nav class="nav">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">Personal Info</a>
+          {% if has_elections %}<a href="{{ url_for('main.elections') }}" class="{{ 'active' if request.endpoint == 'main.elections' }}">Elections</a>{% endif %}
+          <a href="{{ url_for('main.feedback') }}" class="{{ 'active' if request.endpoint == 'main.feedback' }}">Contact</a>
+          {% if has_settings %}<a href="{{ url_for('main.settings') }}" class="{{ 'active' if request.endpoint in ('main.settings', 'main.change_password', 'main.change_email') }}">Settings</a>{% endif %}
+          {% if has_elections %}<a class="btn btn-sm btn-outline" href="{{ url_for('main.elections') }}">Vote Now</a>{% endif %}
+          <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="link-btn">Log out</button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('main.index') }}#about">About</a>
+          <a href="{{ url_for('main.index') }}#how">How it works</a>
+          <a href="{{ url_for('main.index') }}#contact">Contact</a>
+          <a class="btn btn-sm" href="{{ url_for('auth.login') }}">Login</a>
+        {% endif %}
+      </nav>
+    </header>
+  </div>
+  {% endblock %}
+
+  {% block flashes %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+  {% endblock %}
+
+  {% block content %}{% endblock %}
+  {% block footer %}{% endblock %}
+  {% block page_scripts %}{% endblock %}
+</body>
+</html>

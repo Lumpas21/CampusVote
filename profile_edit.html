@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Edit profile - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap">
+  <section class="card auth-card" style="width:min(640px,100%)">
+    <p class="eyebrow">Personal info</p>
+    <h1>Edit profile</h1>
+    <p class="subtitle">Your student ID cannot be changed here. Contact the election committee if it is wrong. To change your school email, go to <a href="{{ url_for('main.settings') }}">Settings</a>.</p>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="field">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" name="full_name" maxlength="150" value="{{ values.full_name }}">
+        {% if errors.full_name %}<span class="error">{{ errors.full_name }}</span>{% endif %}
+      </div>
+
+      <div class="field">
+        <label>Student ID &middot; School email</label>
+        <input type="text" value="{{ current_user.student_id }} &middot; {{ current_user.email }}" disabled>
+      </div>
+
+      <div class="field">
+        <label for="program_id">Program</label>
+        <select id="program_id" name="program_id">
+          <option value="" disabled {{ 'selected' if not values.program_id }}>Select program</option>
+          {% for label, programs in groups %}
+          <optgroup label="{{ label }}">
+            {% for pid, pname in programs %}
+            <option value="{{ pid }}" {{ 'selected' if values.program_id == pid }}>{{ pname }}</option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+        {% if errors.program_id %}<span class="error">{{ errors.program_id }}</span>{% endif %}
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="year_level_id">Year level</label>
+          <select id="year_level_id" name="year_level_id">
+            <option value="" disabled {{ 'selected' if not values.year_level_id }}>Select year</option>
+            {% for y in years %}
+            <option value="{{ y.id }}" {{ 'selected' if values.year_level_id == y.id }}>{{ y.name }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.year_level_id %}<span class="error">{{ errors.year_level_id }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label for="section_id">Section</label>
+          <select id="section_id" name="section_id">
+            <option value="" disabled>Select section</option>
+            {% for s in sections %}
+            <option value="{{ s.id }}" data-year="{{ s.year_level_id }}" {{ 'selected' if values.section_id == s.id }}>{{ s.code }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.section_id %}<span class="error">{{ errors.section_id }}</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" type="submit">Save changes</button>
+        <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</div>
+<script>
+  (function () {
+    var year = document.getElementById("year_level_id");
+    var section = document.getElementById("section_id");
+    function filter() {
+      var y = year.value, keep = false;
+      Array.prototype.forEach.call(section.options, function (o) {
+        if (!o.dataset.year) return;
+        var show = o.dataset.year === y;
+        o.hidden = !show; o.disabled = !show;
+        if (show && o.selected) keep = true;
+      });
+      if (!keep) section.selectedIndex = 0;
+    }
+    year.addEventListener("change", filter);
+    filter();
+  })();
+</script>
+{% endblock %}

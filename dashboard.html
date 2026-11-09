@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Personal Info - CampusVote{% endblock %}
+
+
+{% block content %}
+<div class="wrap profile">
+  <div>
+    {% if current_user.profile_photo_path %}
+    <div class="avatar has-photo" role="img" aria-label="Your profile photo"
+         style="background-image:url('{{ url_for('main.profile_photo', v=current_user.profile_photo_path) }}')"></div>
+    {% else %}
+    <div class="avatar" role="img" aria-label="Profile photo placeholder"></div>
+    {% endif %}
+    <div class="profile-actions">
+      <form method="post" action="{{ url_for('main.upload_photo') }}" enctype="multipart/form-data" id="photo-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="file" name="photo" id="photo-input" accept="image/jpeg,image/png,image/webp" hidden>
+        <button class="btn btn-ghost btn-block" type="button" id="photo-btn">Change photo</button>
+      </form>
+      <dialog id="photo-reminder" class="reminder">
+        <h3>Upload a formal picture</h3>
+        <p class="muted">Your photo may be shown to other students on the ballot, so please use a proper one:</p>
+        <ul>
+          <li>Formal or school-appropriate attire</li>
+          <li>Face the camera, clearly visible and well lit</li>
+          <li>Plain background, no filters or stickers</li>
+          <li>No cap, mask or sunglasses</li>
+          <li>Only you in the photo (JPG, PNG or WebP, up to 5 MB)</li>
+        </ul>
+        <div class="btn-row">
+          <button class="btn" type="button" id="reminder-ok">I understand, choose photo</button>
+          <button class="btn btn-ghost" type="button" id="reminder-cancel">Cancel</button>
+        </div>
+      </dialog>
+      <a class="btn btn-ghost btn-block" style="text-align:center" href="{{ url_for('main.edit_profile') }}">Edit profile</a>
+      {% if current_user.role == "student" %}
+      <a class="btn btn-block" href="{{ url_for('main.apply_officer') }}">Apply as officer</a>
+      {% if applications %}
+      <div class="note">My applications</div>
+      <ul class="app-list">
+        {% for c, pos, e in applications %}
+        <li>
+          <div class="app-top">
+            <strong>{{ pos.title }}</strong>
+            {{ status_badge(c.status) }}
+          </div>
+          <div class="app-meta">{{ e.title }}</div>
+          {% if c.status == "rejected" and c.reject_reason %}<div class="app-why">{{ c.reject_reason }}</div>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="note">My application: none yet</div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card info-card">
+    <h2>Personal Info</h2>
+    <dl class="info-grid">
+      <div><dt>Full name</dt><dd>{{ current_user.full_name or "-" }}</dd></div>
+      <div><dt>Student ID</dt><dd>{{ current_user.student_id or "-" }}</dd></div>
+
+      <div><dt>School email</dt><dd>{{ current_user.email }}</dd></div>
+      <div><dt>Program</dt><dd>{{ current_user.program.name if current_user.program else "-" }}</dd></div>
+
+      <div><dt>Year and section</dt>
+        <dd>{% if current_user.section %}{{ current_user.section.year_level.name }}, {{ current_user.section.code }}{% else %}-{% endif %}</dd></div>
+      <div><dt>College</dt><dd>{{ current_user.program.college.name if current_user.program else "-" }}</dd></div>
+
+      <div><dt>Face verification</dt>
+        <dd>
+          {% if current_user.face_status in ("enrolled", "approved") %}
+            <span class="badge ok">Enrolled</span>
+          {% elif current_user.face_status == "pending" %}
+            <span class="badge warn">Pending review</span>
+          {% elif current_user.face_status == "rejected" %}
+            <span class="badge warn">Photo rejected</span>
+          {% else %}
+            <span class="badge warn">Not set up</span>
+            {% if current_user.email_verified and current_user.role == "student" %}
+              <a class="profile-verification-link" href="{{ url_for('auth.face_setup') }}">Set up face verification</a>
+            {% endif %}
+          {% endif %}
+        </dd>
+      </div>
+      <div><dt>Account</dt>
+        <dd>{% if current_user.email_verified %}<span class="badge ok">Verified</span>{% else %}<span class="badge warn">Unverified</span>{% endif %}</dd></div>
+    </dl>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+  (function () {
+    var btn = document.getElementById("photo-btn"), input = document.getElementById("photo-input");
+    var box = document.getElementById("photo-reminder");
+    btn.addEventListener("click", function () {
+      if (box.showModal) box.showModal(); else input.click();
+    });
+    document.getElementById("reminder-cancel").addEventListener("click", function () { box.close(); });
+    document.getElementById("reminder-ok").addEventListener("click", function () { box.close(); input.click(); });
+    input.addEventListener("change", function () {
+      if (input.files.length) document.getElementById("photo-form").submit();
+    });
+  })();
+</script>
+{% endblock %}

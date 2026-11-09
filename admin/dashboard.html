@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import phase_pill, pill %}
+{% block title %}Dashboard - CampusVote Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Where the elections stand and what needs your attention.{% endblock %}
+
+{% block body %}
+<div class="stats">
+  <div class="stat"><div class="n">{{ stats.students }}</div><div class="l">Registered students</div></div>
+  <div class="stat"><div class="n">{{ stats.enrolled }}</div><div class="l">Face verification enrolled</div>
+    <div class="d muted">{{ ((stats.enrolled * 100) // stats.students) if stats.students else 0 }}% of students</div></div>
+  <div class="stat {{ 'alert' if stats.pending_apps }}"><div class="n">{{ stats.pending_apps }}</div><div class="l">Applications waiting for review</div></div>
+  <div class="stat"><div class="n">{{ stats.voters }}</div><div class="l">Students who have voted</div></div>
+</div>
+
+<div class="split">
+  <section class="panel">
+    <h2>Elections in progress</h2>
+    <p class="sub">Published elections that have not closed yet.</p>
+    {% if live %}
+    <div class="list-rows">
+      {% for e, phase in live %}
+      <div class="row">
+        <div><b>{{ e.title }}</b>
+          <small>{{ e.scope_label or "All students" }}{% if e.voting_start and e.voting_end %} &middot; Voting {{ e.voting_start|local_date }} &ndash; {{ e.voting_end|local_date }}{% endif %}</small></div>
+        <div>{{ phase_pill(phase) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><h3>No election is running</h3>Create one to open applications and voting.<br><br>
+      <a class="btn btn-sm2" href="{{ url_for('admin.new_election') }}">New election</a></div>
+    {% endif %}
+  </section>
+
+  <aside class="stack-lg">
+    <section class="panel">
+      <h2>Needs attention</h2>
+      <div class="attention">
+        <a href="{{ url_for('admin.applications', status='pending') }}"><span>Applications to review</span><b>{{ stats.pending_apps }}</b></a>
+        <a href="{{ url_for('admin.voters', filter='locked') }}"><span>Locked student accounts</span><b>{{ stats.locked }}</b></a>
+        <a href="{{ url_for('admin.elections') }}"><span>Draft elections</span><b>{{ drafts }}</b></a>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Recent activity</h2>
+      {% if recent %}
+      <div class="list-rows">
+        {% for log, user in recent %}
+        <div class="row"><div><b>{{ user.full_name if user else "Unknown" }}</b><small>{{ log.action }}</small></div>
+          <small class="muted">{{ log.created_at.strftime("%b %d, %H:%M") }}</small></div>
+        {% endfor %}
+      </div>
+      <p style="margin:14px 0 0"><a href="{{ url_for('admin.audit') }}">See all activity</a></p>
+      {% else %}<p class="muted" style="margin:0">Nothing recorded yet.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

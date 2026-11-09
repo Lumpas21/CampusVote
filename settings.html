@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pw_field %}
+{% block title %}Settings - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <h1>Settings</h1>
+  <p class="subtitle">Manage how you sign in to CampusVote.</p>
+
+  <div class="settings-grid">
+    <section class="card">
+      <h2>Password</h2>
+      <p class="subtitle">Use at least 8 characters.</p>
+      <form method="post" action="{{ url_for('main.change_password') }}" novalidate>
+        {{ password_form.hidden_tag() }}
+        {{ pw_field(password_form.current_password, "Current password", "current-password") }}
+        {{ pw_field(password_form.password, "New password", "new-password") }}
+        {{ pw_field(password_form.confirm, "Confirm new password", "new-password") }}
+        <button class="btn" type="submit">Update password</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>School email</h2>
+      <p class="subtitle">Signed in as <strong style="color:var(--text)">{{ current_user.email }}</strong>. We send a code to the new address, and the email only changes after you enter it.</p>
+      <form method="post" action="{{ url_for('main.change_email') }}" novalidate>
+        {{ email_form.hidden_tag() }}
+        <div class="field">
+          <label for="new_email">New school email</label>
+          {{ email_form.new_email(placeholder="name@ssct.edu.ph", autocomplete="email") }}
+          {% for e in email_form.new_email.errors %}<span class="error">{{ e }}</span>{% endfor %}
+        </div>
+        {{ pw_field(email_form.password, "Current password", "current-password") }}
+        <button class="btn" type="submit">Send code to new email</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script src="{{ url_for('static', filename='js/pw-eye.js') }}"></script>
+{% endblock %}

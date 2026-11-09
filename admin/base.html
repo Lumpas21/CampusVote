@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "admin/_ui.html" import icon %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+{% block header %}{% endblock %}
+{% block flashes %}{% endblock %}
+
+{% block content %}
+{% set ep = request.endpoint or "" %}
+{% set parts = (current_user.full_name or "Admin").split() %}
+<div class="adm">
+  <aside class="adm-side">
+    <div class="adm-brand">
+      <a href="{{ url_for('admin.dashboard') }}">CampusVote</a>
+      <span>Admin</span>
+    </div>
+    <nav class="adm-nav" aria-label="Admin sections">
+      <a href="{{ url_for('admin.dashboard') }}" class="{{ 'on' if ep == 'admin.dashboard' }}">{{ icon("home") }}Dashboard</a>
+      <a href="{{ url_for('admin.elections') }}" class="{{ 'on' if ep in ('admin.elections', 'admin.new_election', 'admin.edit_election') }}">{{ icon("elections") }}Elections</a>
+      <a href="{{ url_for('admin.applications') }}" class="{{ 'on' if ep == 'admin.applications' }}">{{ icon("applications") }}Applications
+        {% if pending_applications %}<span class="count">{{ pending_applications }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin.voters') }}" class="{{ 'on' if ep == 'admin.voters' }}">{{ icon("voters") }}Voters</a>
+      <a href="{{ url_for('admin.results') }}" class="{{ 'on' if ep == 'admin.results' }}">{{ icon("results") }}Results</a>
+      <a href="{{ url_for('admin.audit') }}" class="{{ 'on' if ep == 'admin.audit' }}">{{ icon("audit") }}Audit logs</a>
+      {% if current_user.admin_role == "super_admin" %}
+      <a href="{{ url_for('admin.settings') }}" class="{{ 'on' if ep == 'admin.settings' }}">{{ icon("settings") }}Settings</a>
+      {% endif %}
+    </nav>
+    <div class="adm-foot">Times are shown in local time. Logs use UTC.</div>
+  </aside>
+
+  <div class="adm-main">
+    <header class="adm-top">
+      <div>
+        <h1>{% block page_title %}{% endblock %}</h1>
+        <p>{% block page_sub %}{% endblock %}</p>
+      </div>
+      <div class="adm-user">
+        <div class="who"><b>{{ current_user.full_name or "Admin" }}</b><span>{{ "Super admin" if current_user.admin_role == "super_admin" else "Department admin" }}</span></div>
+        <div class="avatar-sm" aria-hidden="true">{{ (parts[0][0] ~ (parts[1][0] if parts|length > 1 else ""))|upper }}</div>
+        <form class="inline" method="post" action="{{ url_for('admin.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-ghost btn-sm2" type="submit">Log out</button>
+        </form>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="adm-flashes">
+        {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="adm-body">
+      {% block body %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}<script src="{{ url_for('static', filename='js/admin.js') }}"></script>{% endblock %}

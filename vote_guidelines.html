@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Voting guidelines - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <p class="eyebrow">Voting guidelines</p>
+  <h1>{{ election.title }}</h1>
+  <p class="subtitle">{{ election.scope_label or "All students" }} &middot; {{ election.type|replace("_", " ")|title }} &middot;
+    Voting closes {{ election.voting_end|local_dt }}</p>
+
+  <div class="stack page-card">
+    <section class="card">
+      <h2>Before you start</h2>
+      <ol class="vt-steps">
+        <li><b>Face check.</b> We confirm that you are the owner of this account.</li>
+        <li><b>Choose.</b> You will see {{ ballot|length }} position{{ "s" if ballot|length != 1 }}, one at a time. You may abstain on any of them.</li>
+        <li><b>Review.</b> Check your choices before you confirm.</li>
+        <li><b>Second face check.</b> Then you cast your vote.</li>
+        <li><b>Receipt.</b> You get a receipt code as proof that you voted.</li>
+      </ol>
+      <p class="muted vt-note">You can vote only once. A submitted vote cannot be changed, and nobody can see who you voted for.</p>
+    </section>
+
+    {% if election.rules %}
+    <section class="card">
+      <h2>Rules of this election</h2>
+      <div class="vt-rules">{{ election.rules }}</div>
+    </section>
+    {% endif %}
+
+    <div class="btn-row">
+      <a class="btn" href="{{ url_for('main.vote_start', election_id=election.id) }}">I understand, start voting</a>
+      <a class="btn btn-ghost" href="{{ url_for('main.elections') }}">Back</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

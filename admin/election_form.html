@@ -1,0 +1,109 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ "Edit election" if election else "New election" }} - CampusVote Admin{% endblock %}
+{% block page_title %}{{ "Edit election" if election else "New election" }}{% endblock %}
+{% block page_sub %}Department elections use Governor and Vice Governor. Organization and Classroom elections use President and Vice President. You can add or remove positions.{% endblock %}
+
+{% block body %}
+<section class="panel" style="max-width:none">
+  {% if locked %}
+  <div class="flash warning" style="margin-bottom:18px">Students already applied or voted, so the type, scope and any position in use are locked.</div>
+  {% endif %}
+  <form method="post" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="field">
+      <label for="title">Election title</label>
+      <input type="text" id="title" name="title" maxlength="200" value="{{ values.title }}" placeholder="CCIS Council General Election">
+      {% if errors.title %}<span class="error">{{ errors.title }}</span>{% endif %}
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="type">Type</label>
+        <select id="type" name="type" {{ 'disabled' if locked }}>
+          {% for key, label in types.items() %}<option value="{{ key }}" {{ 'selected' if values.type == key }}>{{ label }}</option>{% endfor %}
+        </select>
+        {% if errors.type %}<span class="error">{{ errors.type }}</span>{% endif %}
+      </div>
+
+      <div class="field">
+        <label>Scope</label>
+        <div class="scope" data-type="department">
+          <select name="college_id" aria-label="College" {{ 'disabled' if locked }}>
+            <option value="" disabled {{ 'selected' if not values.college_id }}>Choose a college</option>
+            {% for c in colleges %}<option value="{{ c.id }}" {{ 'selected' if values.college_id == c.id }}>{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="scope" data-type="classroom" hidden>
+          <div class="form-grid" style="gap:10px">
+            <select name="program_id" aria-label="Program (optional)" {{ 'disabled' if locked }}>
+              <option value="">Any program</option>
+              {% for p in programs %}<option value="{{ p.id }}" {{ 'selected' if values.program_id == p.id }}>{{ p.code }}</option>{% endfor %}
+            </select>
+            <select name="section_id" aria-label="Section" {{ 'disabled' if locked }}>
+              <option value="" disabled {{ 'selected' if not values.section_id }}>Section</option>
+              {% for s, y in sections %}<option value="{{ s.id }}" {{ 'selected' if values.section_id == s.id }}>{{ y.name }} - {{ s.code }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="scope" data-type="organization" hidden>
+          <input type="text" name="org_name" maxlength="100" value="{{ values.org_name }}" placeholder="Computing Society" {{ 'disabled' if locked }}>
+          <span class="field-note">Organization elections are shown to every student until membership lists are added.</span>
+        </div>
+        {% if errors.scope %}<span class="error">{{ errors.scope }}</span>{% endif %}
+      </div>
+
+      <div class="field">
+        <label for="candidacy_start">Candidacy starts</label>
+        <input type="datetime-local" id="candidacy_start" name="candidacy_start" value="{{ values.candidacy_start }}">
+        {% if errors.candidacy_start %}<span class="error">{{ errors.candidacy_start }}</span>{% endif %}
+      </div>
+      <div class="field">
+        <label for="candidacy_end">Candidacy ends</label>
+        <input type="datetime-local" id="candidacy_end" name="candidacy_end" value="{{ values.candidacy_end }}">
+        {% if errors.candidacy_end %}<span class="error">{{ errors.candidacy_end }}</span>{% endif %}
+      </div>
+      <div class="field">
+        <label for="voting_start">Voting starts</label>
+        <input type="datetime-local" id="voting_start" name="voting_start" value="{{ values.voting_start }}">
+        {% if errors.voting_start %}<span class="error">{{ errors.voting_start }}</span>{% endif %}
+      </div>
+      <div class="field">
+        <label for="voting_end">Voting ends</label>
+        <input type="datetime-local" id="voting_end" name="voting_end" value="{{ values.voting_end }}">
+        {% if errors.voting_end %}<span class="error">{{ errors.voting_end }}</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Positions</label>
+      <div class="pos-box" id="pos-box" data-defaults='{{ defaults|tojson }}' data-touched="{{ '1' if election else '0' }}">
+        <div class="pos-list pos-box">
+          {% for name in values.positions %}
+          <span class="pos-chip"><input type="hidden" name="positions" value="{{ name }}"><span>{{ name }}</span><button type="button" aria-label="Remove {{ name }}">&times;</button></span>
+          {% endfor %}
+        </div>
+        <button class="pos-add" id="pos-add" type="button">+ Add position</button>
+        <input class="pos-new" id="pos-new" type="text" maxlength="100" placeholder="Position name" hidden>
+      </div>
+      {% if errors.positions %}<span class="error">{{ errors.positions }}</span>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="rules">Rules shown to voters</label>
+      <textarea id="rules" name="rules" maxlength="3000" placeholder="Only verified students may vote. One vote per position. Votes cannot be changed after submission.">{{ values.rules }}</textarea>
+      {% if errors.rules %}<span class="error">{{ errors.rules }}</span>{% endif %}
+    </div>
+
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{{ url_for('admin.elections') }}">Cancel</a>
+      {% if not election or election.status == "draft" %}
+        <button class="btn btn-ghost" type="submit" name="action" value="draft">Save as draft</button>
+        <button class="btn" type="submit" name="action" value="publish">Publish election</button>
+      {% else %}
+        <button class="btn" type="submit" name="action" value="save">Save changes</button>
+      {% endif %}
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Confirm new email - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <section class="card auth-card otp-center" style="width:min(560px,100%)">
+    <h1 style="font-size:2.1rem">Confirm your new email</h1>
+    <p class="subtitle">Enter the 6-digit code we sent to <strong>{{ masked_email }}</strong>.</p>
+    {% if email_mode %}
+    <p class="hint" style="margin:-14px 0 6px">Check the inbox and the Spam folder. The code expires in {{ expiry_minutes }} minute{{ '' if expiry_minutes == 1 else 's' }}.</p>
+    {% endif %}
+
+    <form method="post" id="otp-form" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="code" id="code">
+      <div class="otp-row">
+        {% for i in range(6) %}
+        <input class="otp-box" type="text" inputmode="numeric" autocomplete="{{ 'one-time-code' if i == 0 else 'off' }}"
+               maxlength="1" aria-label="Digit {{ i + 1 }}" {{ 'autofocus' if i == 0 }}>
+        {% endfor %}
+      </div>
+      <button class="btn btn-block" type="submit" id="verify-btn">Confirm new email</button>
+    </form>
+
+    <div class="otp-links">
+      <form method="post" action="{{ url_for('main.resend_new_email_code') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        Did not get it?
+        <button class="text-btn" id="resend-btn" data-wait="{{ resend_in }}" type="submit">Resend code</button>
+        <span id="resend-note"></span>
+      </form>
+      <form method="post" action="{{ url_for('main.cancel_email_change') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        Wrong address? <button class="text-btn" type="submit">Cancel and go back</button>
+      </form>
+    </div>
+
+    {% if dev_code %}
+    <div class="dev-box">
+      DEVELOPMENT ONLY (OTP_DELIVERY=console) &middot; your code is <b>{{ dev_code }}</b><br>
+      No email was sent. Set OTP_DELIVERY=smtp in .env so the code goes to the inbox.
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script src="{{ url_for('static', filename='js/otp-boxes.js') }}"></script>
+{% endblock %}

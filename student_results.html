@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Results - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <p class="eyebrow">Official results</p>
+  <h1>{{ election.title }}</h1>
+  <p class="subtitle">{{ voters }} student{{ "s" if voters != 1 }} voted.</p>
+
+  <div class="stack page-card">
+    {% for b in blocks %}
+    <section class="card">
+      <h2>{{ b.position.title }}</h2>
+      {% if b.entries %}
+      <div class="vt-results">
+        {% for e in b.entries %}
+        <div class="vt-res {{ 'lead' if e.leading }}">
+          <div class="vt-res-top"><span>{{ e.name }}{% if e.party %} <span class="muted">&middot; {{ e.party }}</span>{% endif %}</span>
+            <b>{{ e.votes }} &middot; {{ e.pct }}%</b></div>
+          <div class="vt-bar"><span style="width:{{ e.pct }}%"></span></div>
+        </div>
+        {% endfor %}
+        <p class="muted">Abstain: {{ b.abstain }}</p>
+      </div>
+      {% else %}<p class="muted">No candidates for this position.</p>{% endif %}
+    </section>
+    {% endfor %}
+    <div class="btn-row"><a class="btn btn-ghost" href="{{ url_for('main.elections') }}">Back to elections</a></div>
+  </div>
+</div>
+{% endblock %}

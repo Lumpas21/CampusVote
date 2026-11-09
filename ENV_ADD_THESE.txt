@@ -1,0 +1,20 @@
+# ============================================================
+# Idagdag mo ang mga ito sa dulo ng iyong .env  (huwag ipalit ang buong .env)
+# ============================================================
+
+# --- Email: ipadala ang code sa mismong SSCT inbox ng student ---
+OTP_DELIVERY=smtp
+OTP_EXPIRY_MINUTES=2
+
+# Halimbawa: Gmail ng system (gumawa ng "App password" sa Google Account > Security > 2-Step Verification)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=1
+MAIL_USERNAME=campusvote.system@gmail.com
+MAIL_PASSWORD=xxxx xxxx xxxx xxxx
+MAIL_FROM=campusvote.system@gmail.com
+
+# --- Face verification (optional, ito ang defaults) ---
+# FACE_MODEL=SFace
+# FACE_DETECTOR=yunet
+# FACE_ANTI_SPOOF=0     # 1 = tanggihan ang litrato/screen ng ibang tao

@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import pill, pager %}
+{% block title %}Audit logs - CampusVote Admin{% endblock %}
+{% block page_title %}Audit logs{% endblock %}
+{% block page_sub %}Every important action is recorded.{% endblock %}
+
+{% block body %}
+<div class="toolbar">
+  <nav class="pills" aria-label="Filter activity">
+    <a href="{{ url_for('admin.audit') }}" class="{{ 'on' if group == 'all' }}">All</a>
+    <a href="{{ url_for('admin.audit', group='logins') }}" class="{{ 'on' if group == 'logins' }}">Logins</a>
+    <a href="{{ url_for('admin.audit', group='face') }}" class="{{ 'on' if group == 'face' }}">Face checks</a>
+    <a href="{{ url_for('admin.audit', group='approvals') }}" class="{{ 'on' if group == 'approvals' }}">Approvals</a>
+    <a href="{{ url_for('admin.audit', group='blocked') }}" class="{{ 'on' if group == 'blocked' }}">Blocked access</a>
+  </nav>
+</div>
+
+<section class="panel">
+  {% if rows %}
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Time (UTC)</th><th>User</th><th>Action</th><th>Details</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for log, user in rows %}
+        <tr>
+          <td class="nowrap">{{ log.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td>{{ user.full_name if user else "Unknown" }}</td>
+          <td>{{ pill(action_kind(log.action), log.action) }}</td>
+          <td class="muted">{{ log.details or "" }}</td>
+          <td class="muted nowrap">{{ log.ip_address or "" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pager(page, pages, "admin.audit", {"group": group}, total, "entry") }}
+  {% else %}
+  <div class="empty"><h3>Nothing here yet</h3>Actions will be listed as people use the system.</div>
+  {% endif %}
+</section>
+{% endblock %}

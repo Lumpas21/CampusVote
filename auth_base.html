@@ -1,0 +1,52 @@
+{# Shared full-screen shell for register / verify / face / login. #}
+{% extends "base.html" %}
+{% block header %}{% endblock %}
+{% block flashes %}{% endblock %}
+
+{% block content %}
+<div class="auth-screen">
+  <div class="wrap">
+    <header class="auth-header">
+      <a class="brand" href="{{ url_for('main.index') }}">CampusVote</a>
+      <nav class="nav">
+        <a href="{{ url_for('main.index') }}#about">About</a>
+        <a href="{{ url_for('main.index') }}#contact">Contact</a>
+        <a class="btn btn-sm" href="{{ url_for('auth.login') }}">Login</a>
+      </nav>
+    </header>
+  </div>
+
+  <main class="auth-main">
+    <div class="card auth-card2 {% block card_class %}{% endblock %}">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="card-flashes">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+      {% block card %}{% endblock %}
+    </div>
+  </main>
+
+  <div class="wrap">
+    <footer class="auth-footer">
+      <span>&copy; CampusVote</span>
+      <a href="{{ url_for('main.index') }}">Back to home</a>
+    </footer>
+  </div>
+</div>
+
+<script>
+  // Show / hide password (eye icon)
+  document.querySelectorAll("[data-eye]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.dataset.eye);
+      input.type = input.type === "password" ? "text" : "password";
+    });
+  });
+</script>
+{% block scripts %}{% endblock %}
+{% endblock %}

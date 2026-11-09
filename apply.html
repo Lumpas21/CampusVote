@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Apply as officer - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <h1>Apply as officer</h1>
+  <p class="subtitle">Pick an open election and a position, then tell students what you stand for. The election committee reviews every application.</p>
+
+  <div class="stack page-card">
+
+    {% if applications %}
+    <section class="card">
+      <h2>Your applications</h2>
+      <ul class="app-list" style="margin-top:14px">
+        {% for c, pos, e in applications %}
+        <li>
+          <div class="app-top">
+            <strong>{{ pos.title }}</strong>
+            {{ status_badge(c.status) }}
+          </div>
+          <div class="app-meta">{{ e.title }}{% if c.party_group %} &middot; {{ c.party_group }}{% endif %}</div>
+          {% if c.status == "rejected" and c.reject_reason %}<div class="app-why">{{ c.reject_reason }}</div>{% endif %}
+          {% if c.poster_path %}<a class="text-btn" href="{{ url_for('main.platform_image_file', candidate_id=c.id) }}" target="_blank" rel="noopener">View platform image</a>{% endif %}
+          {% if c.status == "pending" %}
+          <form class="inline-form" method="post" action="{{ url_for('main.withdraw_application', candidate_id=c.id) }}"
+                onsubmit="return confirm('Withdraw this application?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="text-btn" type="submit">Withdraw application</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% if problems %}
+    <section class="card">
+      <h2>Before you apply</h2>
+      <p class="muted" style="margin:6px 0 0">Finish these first:</p>
+      <ul class="todo-list">
+        {% for text, link in problems %}
+        <li>
+          <span>{{ text }}</span>
+          {% if link %}<a class="btn btn-ghost btn-sm" style="padding:8px 16px" href="{{ link }}">Go</a>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% elif not elections %}
+    <section class="card" style="text-align:center">
+      <h2>No elections are accepting applications</h2>
+      <p class="muted" style="margin:8px 0 0">When the committee opens candidacy for an election you can join, it will show up here. See the <a href="{{ url_for('main.elections') }}">Elections</a> page for what is published.</p>
+    </section>
+
+    {% else %}
+    <section class="card">
+      <h2>Application form</h2>
+      <form method="post" enctype="multipart/form-data" novalidate id="apply-form" style="margin-top:18px">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="field">
+          <label for="election_id">Election</label>
+          <select id="election_id" name="election_id">
+            {% if elections|length > 1 %}<option value="" disabled {{ 'selected' if not values.election_id }}>Choose an election</option>{% endif %}
+            {% for e in elections %}
+            <option value="{{ e.id }}" {{ 'selected' if values.election_id == e.id or elections|length == 1 }}>
+              {{ e.title }} (apply until {{ e.candidacy_end|local_dt }})
+            </option>
+            {% endfor %}
+          </select>
+          {% if errors.election_id %}<span class="error">{{ errors.election_id }}</span>{% endif %}
+        </div>
+
+        {% for e in elections %}{% if e.rules %}
+        <div class="rules" data-election="{{ e.id }}" hidden>{{ e.rules }}</div>
+        {% endif %}{% endfor %}
+
+        <div class="field">
+          <label for="position_id">Position</label>
+          <select id="position_id" name="position_id">
+            <option value="" disabled {{ 'selected' if not values.position_id }}>Choose a position</option>
+            {% for e in elections %}{% for p in positions[e.id] %}
+            <option value="{{ p.id }}" data-election="{{ e.id }}" {{ 'selected' if values.position_id == p.id }}>{{ p.title }}</option>
+            {% endfor %}{% endfor %}
+          </select>
+          {% if errors.position_id %}<span class="error">{{ errors.position_id }}</span>{% endif %}
+        </div>
+
+        <div class="field">
+          <label for="party_group">Party or group <span class="muted">(optional)</span></label>
+          <input type="text" id="party_group" name="party_group" maxlength="100" value="{{ values.party_group }}">
+          {% if errors.party_group %}<span class="error">{{ errors.party_group }}</span>{% endif %}
+        </div>
+
+        <div class="field">
+          <label for="platform">Your platform</label>
+          <div class="pf-split">
+            <div class="pf-text">
+              <textarea id="platform" name="platform" data-min="200" placeholder="Summarize your top plans in 4 to 6 sentences.">{{ values.platform }}</textarea>
+              <span class="counter" data-counter="platform"></span>
+              {% if errors.platform %}<span class="error">{{ errors.platform }}</span>{% endif %}
+            </div>
+            <div class="pf-image">
+              <input type="file" id="platform_image" name="platform_image" accept="image/png,image/jpeg" hidden>
+              <button type="button" class="pf-drop" id="pf-pick">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+                <b>Upload platform image</b>
+                <small>PNG or JPG, up to 5 MB. Optional.</small>
+              </button>
+              <div class="pf-preview" id="pf-preview" hidden>
+                <button type="button" class="pf-thumb" id="pf-view" title="Click to view full size"><img id="pf-img" alt="Platform image preview"></button>
+                <div class="pf-actions">
+                  <span id="pf-name" class="muted"></span>
+                  <button type="button" class="text-btn" id="pf-change">Change</button>
+                  <button type="button" class="text-btn" id="pf-remove">Remove</button>
+                </div>
+              </div>
+              <span class="error" id="pf-error" {% if not errors.platform_image %}hidden{% endif %}>{{ errors.platform_image }}</span>
+              {% if errors.platform_image %}<span class="hint">Please choose the image again.</span>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="reason">Why are you running?</label>
+          <textarea id="reason" name="reason" data-min="200" style="min-height:120px" placeholder="Tell us why you want to serve, in 3 to 5 sentences.">{{ values.reason }}</textarea>
+          <span class="counter" data-counter="reason"></span>
+          {% if errors.reason %}<span class="error">{{ errors.reason }}</span>{% endif %}
+        </div>
+
+        <label class="check">
+          <input type="checkbox" name="agree" {{ 'checked' if values.agree }}>
+          <span>I confirm my answers are true, and that my name and profile photo may be shown to students on the ballot.</span>
+        </label>
+        {% if errors.agree %}<span class="error" style="margin:-14px 0 14px">{{ errors.agree }}</span>{% endif %}
+
+        <div class="btn-row">
+          <button class="btn" type="submit">Send application</button>
+          <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">Cancel</a>
+        </div>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<dialog id="pf-dialog" class="lightbox" aria-label="Platform image">
+  <button type="button" class="lightbox-close" id="pf-close" aria-label="Close">&times;</button>
+  <img id="pf-full" alt="Platform image, full size">
+</dialog>
+<script src="{{ url_for('static', filename='js/apply.js') }}"></script>
+{% endblock %}
