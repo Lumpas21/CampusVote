@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% block title %}Face photo reviews - CampusVote Admin{% endblock %}
+{% block page_title %}Face photo reviews{% endblock %}
+{% block page_sub %}Approve a clear reference photo, or reject it so the student can send another.{% endblock %}
+
+{% block body %}
+<section class="panel">
+  {% if submissions %}
+  <div class="review-list">
+    {% for face_data, student in submissions %}
+    <article class="review-item">
+      <img src="{{ url_for('admin.face_photo', user_id=student.id) }}" alt="Face photo submitted by {{ student.full_name }}">
+      <div class="review-details">
+        <h2>{{ student.full_name }}</h2>
+        <p>{{ student.student_id }} &middot; {{ student.email }}</p>
+        <p class="muted">Submitted {{ face_data.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</p>
+        <div class="review-actions">
+          <form method="post" action="{{ url_for('admin.approve_face', user_id=student.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm2" type="submit">Approve</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.reject_face', user_id=student.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm2" type="submit">Reject</button>
+          </form>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><h3>Nothing to review</h3>There are no face photos waiting for review.</div>
+  {% endif %}
+</section>
+{% endblock %}

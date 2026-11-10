@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Contact - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <h1>Contact</h1>
+  <p class="subtitle">Reach the election committee for anything the app cannot fix on its own.</p>
+
+  <section class="card page-card">
+    <dl class="contact-list">
+      <div><dt>Office</dt><dd>Student Council Office<br>SSCT, Surigao City</dd></div>
+      <div><dt>Email</dt><dd><a href="mailto:campusvote@ssct.edu.ph">campusvote@ssct.edu.ph</a></dd></div>
+    </dl>
+
+    <h2 style="margin-top:32px">When to contact us</h2>
+    <ul class="when-list">
+      <li>Your student ID or name is wrong and you cannot edit it</li>
+      <li>Your account is locked after failed face checks</li>
+      <li>Your profile photo or officer application was not accepted and you need help</li>
+    </ul>
+    <p class="muted" style="margin:22px 0 0">Forgot your password or changed your school email? You can fix both yourself in <a href="{{ url_for('main.settings') }}">Settings</a>.</p>
+  </section>
+</div>
+{% endblock %}

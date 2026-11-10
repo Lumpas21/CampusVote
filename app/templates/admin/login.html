@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Admin login - CampusVote{% endblock %}
+{% block header %}{% endblock %}
+{% block flashes %}{% endblock %}
+
+{% block content %}
+<div class="auth-screen">
+  <div class="wrap">
+    <header class="auth-header">
+      <a class="brand" href="{{ url_for('main.index') }}">CampusVote</a>
+      <nav class="nav"><span class="header-note">Admin area</span></nav>
+    </header>
+  </div>
+
+  <main class="auth-main">
+    <div class="card auth-card2" style="width:min(460px,100%)">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="card-flashes">
+          {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+        </div>{% endif %}
+      {% endwith %}
+
+      <span class="badge ok" style="margin-bottom:14px">Election Committee</span>
+      <h1>Admin login</h1>
+      <p class="subtitle">For authorized administrators only.</p>
+
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="field">
+          <label for="email">Admin email</label>
+          {{ form.email(placeholder="name@ssct.edu.ph", autocomplete="username", autofocus=true) }}
+          {% for e in form.email.errors %}<span class="error">{{ e }}</span>{% endfor %}
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="pw">
+            {{ form.password(placeholder="Enter your password", autocomplete="current-password") }}
+            <button class="eye" type="button" data-eye="password" aria-label="Show password" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg>
+            </button>
+          </div>
+          {% for e in form.password.errors %}<span class="error">{{ e }}</span>{% endfor %}
+        </div>
+        <button class="btn btn-block" type="submit">Login</button>
+      </form>
+      <p class="below-form"><a href="{{ url_for('main.index') }}">Back to home</a></p>
+    </div>
+  </main>
+</div>
+{% endblock %}

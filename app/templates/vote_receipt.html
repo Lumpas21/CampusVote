@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Voting receipt - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="stack page-card vt-center">
+    <section class="card vt-receipt" id="receipt">
+      <p class="eyebrow">Vote recorded</p>
+      <h2>Thank you for voting</h2>
+      <p class="muted">{{ election.title }}</p>
+      <div class="vt-code">{{ receipt.receipt_code or "-" }}</div>
+      <p class="muted">Receipt code &middot; issued {{ receipt.issued_at|local_dt }}</p>
+      <p class="vt-note muted">Keep this code as proof that you voted. It does not show, and cannot be used to find out, who you voted for.</p>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn" type="button" onclick="window.print()">Print receipt</button>
+        {% if results_open %}<a class="btn btn-ghost" href="{{ url_for('main.student_results', election_id=election.id) }}">View results</a>{% endif %}
+        <a class="btn btn-ghost" href="{{ url_for('main.elections') }}">Back to elections</a>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

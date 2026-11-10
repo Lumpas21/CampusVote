@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Face verification - CampusVote{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="steps">
+    <span class="step">1 Account</span>
+    <span class="step">2 Verify email</span>
+    <span class="step on">3 Face review</span>
+  </div>
+  <section class="card auth-card">
+    <p class="eyebrow">FACE VERIFICATION</p>
+    {% if status == "approved" %}
+      <h1>Face photo approved</h1>
+      <p class="subtitle">The election committee approved your reference photo. A live face check will be required before voting.</p>
+      <a class="btn btn-block" href="{{ url_for('main.dashboard') }}">Continue to account</a>
+    {% elif status == "pending" %}
+      <h1>Review in progress</h1>
+      <p class="subtitle">Your photo is securely submitted. The election committee must approve it before face matching can be used.</p>
+      <span class="badge warn">Pending committee approval</span>
+      <p class="center muted" style="margin-top:24px"><a href="{{ url_for('main.dashboard') }}">Back to account</a></p>
+    {% else %}
+      <h1>Submit a face photo</h1>
+      <p class="subtitle">Upload a clear, front-facing photo. It will remain pending until a committee member approves it.</p>
+      <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="face_photo">Face photo (JPG, PNG, or WebP; up to 5 MB)</label>
+          <input id="face_photo" name="face_photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+        </div>
+        <label class="check">
+          <input name="face_consent" value="yes" type="checkbox" required>
+          <span>I consent to secure storage and use of this photo as my reference for election face checks.</span>
+        </label>
+        <button class="btn btn-block" type="submit">Submit for committee review</button>
+      </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

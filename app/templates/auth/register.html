@@ -1,0 +1,145 @@
+{% extends "auth_base.html" %}
+{% block title %}Create account - CampusVote{% endblock %}
+
+{% macro text_field(f, placeholder="", hint="") %}
+  <div class="field">
+    <label for="{{ f.id }}">{{ f.label.text }}</label>
+    {{ f(placeholder=placeholder) }}
+    {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+    {% for e in f.errors %}<span class="error">{{ e }}</span>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro eye_icon() %}
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg>
+{% endmacro %}
+
+{% block card %}
+<div class="eyebrow">Join the Campus Vote &middot; Step 1 of 3</div>
+<h1>Create your account</h1>
+<p class="subtitle">Use your SNSU details. We will send a 6-digit code to your school email next.</p>
+
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="grid-2">
+    {{ text_field(form.full_name, "Juan A. Dela Cruz") }}
+    {{ text_field(form.student_id, "2024-00123") }}
+  </div>
+
+  {{ text_field(form.email, "name@ssct.edu.ph", "A verification code will be sent to this email.") }}
+
+  <div class="field">
+    <label for="program_id">Program</label>
+    <select id="program_id" name="program_id" data-combo>
+      <option value="" disabled hidden {{ 'selected' if not form.program_id.data }}>Select your program</option>
+      {% for label, items in form.program_groups %}
+      <optgroup label="{{ label }}">
+        {% for pid, text in items %}
+        <option value="{{ pid }}" {{ 'selected' if form.program_id.data == pid }}>{{ text }}</option>
+        {% endfor %}
+      </optgroup>
+      {% endfor %}
+    </select>
+    {% for e in form.program_id.errors %}<span class="error">{{ e }}</span>{% endfor %}
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label for="year_level_id">Year level</label>
+      <select id="year_level_id" name="year_level_id" data-combo>
+        <option value="" disabled hidden {{ 'selected' if not form.year_level_id.data }}>Select year</option>
+        {% for yid, name in form.year_options %}
+        <option value="{{ yid }}" {{ 'selected' if form.year_level_id.data == yid }}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      {% for e in form.year_level_id.errors %}<span class="error">{{ e }}</span>{% endfor %}
+    </div>
+    <div class="field">
+      <label for="section_id">Section</label>
+      <select id="section_id" name="section_id" data-combo data-selected="{{ form.section_id.data or '' }}">
+        <option value="" disabled hidden selected>Select section</option>
+      </select>
+      {% for e in form.section_id.errors %}<span class="error">{{ e }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="pw">
+        {{ form.password(placeholder="At least 8 characters", autocomplete="new-password") }}
+        <button class="eye" type="button" data-eye="password" aria-label="Show password" aria-pressed="false">{{ eye_icon() }}</button>
+      </div>
+      {% for e in form.password.errors %}<span class="error">{{ e }}</span>{% endfor %}
+    </div>
+    <div class="field">
+      <label for="confirm">Confirm password</label>
+      <div class="pw">
+        {{ form.confirm(placeholder="Confirm password", autocomplete="new-password") }}
+        <button class="eye" type="button" data-eye="confirm" aria-label="Show password" aria-pressed="false">{{ eye_icon() }}</button>
+      </div>
+      {% for e in form.confirm.errors %}<span class="error">{{ e }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <label class="check">
+    {{ form.agree() }}
+    <span>I agree to the Terms of Use and Privacy Notice, including face verification for voting.</span>
+  </label>
+  {% for e in form.agree.errors %}<span class="error" style="margin:-12px 0 14px">{{ e }}</span>{% endfor %}
+
+  <button class="btn btn-block" type="submit">Create account and send code</button>
+</form>
+
+<p class="below-form">Already registered? <a href="{{ url_for('auth.login') }}">Login</a></p>
+{% endblock %}
+
+{% block scripts %}
+<script id="sections-data" type="application/json">{{ form.section_options|tojson }}</script>
+<script src="{{ url_for('static', filename='js/combo.js') }}"></script>
+<script>
+  // Section list follows the year level. With no year chosen yet, every section is shown
+  // (1A-4D) and picking one fills in the matching year automatically.
+  (function () {
+    var data = JSON.parse(document.getElementById("sections-data").textContent);
+    var year = document.getElementById("year_level_id");
+    var sec = document.getElementById("section_id");
+    var keep = sec.dataset.selected;
+
+    function yearOf(id) {
+      var d = data.filter(function (x) { return String(x.id) === String(id); })[0];
+      return d ? String(d.year) : "";
+    }
+    function fill(y) {
+      sec.innerHTML = "";
+      var ph = new Option("Select section", "");
+      ph.disabled = true; ph.hidden = true; ph.selected = true;
+      sec.appendChild(ph);
+      data.filter(function (d) { return !y || String(d.year) === y; })
+          .forEach(function (d) {
+            var o = new Option(d.code, d.id);
+            if (String(d.id) === String(keep)) { o.selected = true; }
+            sec.appendChild(o);
+          });
+      keep = null;
+      if (sec._combo) sec._combo.sync();
+    }
+
+    year.addEventListener("change", function () {
+      keep = sec.value;           // keep the section only if it still belongs to this year
+      fill(year.value);
+    });
+    sec.addEventListener("change", function () {
+      var y = yearOf(sec.value);
+      if (y && year.value !== y) {
+        year.value = y;
+        if (year._combo) year._combo.sync();
+        keep = sec.value;
+        fill(y);
+      }
+    });
+    fill(year.value);
+  })();
+</script>
+{% endblock %}

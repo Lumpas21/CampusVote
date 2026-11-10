@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import phase_pill %}
+{% block title %}Elections - CampusVote Admin{% endblock %}
+{% block page_title %}Elections{% endblock %}
+{% block page_sub %}Create and manage elections.{% endblock %}
+
+{% block body %}
+<div class="toolbar">
+  <nav class="pills" aria-label="Filter by type">
+    <a href="{{ url_for('admin.elections') }}" class="{{ 'on' if kind == 'all' }}">All</a>
+    {% for key, label in types.items() %}
+    <a href="{{ url_for('admin.elections', type=key) }}" class="{{ 'on' if kind == key }}">{{ label }}</a>
+    {% endfor %}
+  </nav>
+  <a class="btn" href="{{ url_for('admin.new_election') }}">New election</a>
+</div>
+
+<section class="panel">
+  {% if rows %}
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Election</th><th>Type</th><th>Scope</th><th>Voting period</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for e, phase in rows %}
+        <tr>
+          <td class="name">{{ e.title }}</td>
+          <td>{{ type_label(e.type) }}</td>
+          <td>{{ e.scope_label or "All students" }}</td>
+          <td class="nowrap">{% if e.voting_start and e.voting_end %}{{ e.voting_start|local_date }} &ndash; {{ e.voting_end|local_date }}{% else %}<span class="muted">Not set</span>{% endif %}</td>
+          <td>{{ phase_pill(phase) }}</td>
+          <td class="nowrap">
+            {% if phase == "closed" %}
+              <a href="{{ url_for('admin.results', election=e.id) }}">View results</a>
+            {% else %}
+              <a href="{{ url_for('admin.edit_election', election_id=e.id) }}">Edit</a><span class="sep">&middot;</span>
+              {% if phase in ("candidacy", "open") %}
+              <form class="inline" method="post" action="{{ url_for('admin.close_election', election_id=e.id) }}"
+                    data-confirm="Close this election? Applications and voting stop right away.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="link" type="submit">Close</button>
+              </form>
+              {% else %}
+              <form class="inline" method="post" action="{{ url_for('admin.delete_election', election_id=e.id) }}"
+                    data-confirm="Delete this election? This cannot be undone.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="link danger" type="submit">Delete</button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h3>No elections yet</h3>Create the first one. Students in its scope will see it once it is published.<br><br>
+    <a class="btn btn-sm2" href="{{ url_for('admin.new_election') }}">New election</a></div>
+  {% endif %}
+</section>
+{% endblock %}

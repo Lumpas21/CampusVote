@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import pill, pager %}
+{% block title %}Voters - CampusVote Admin{% endblock %}
+{% block page_title %}Voters{% endblock %}
+{% block page_sub %}Students, face status and who has voted (never who they voted for).{% endblock %}
+
+{% block body %}
+<div class="toolbar">
+  <nav class="pills" aria-label="Filter students">
+    <a href="{{ url_for('admin.voters', q=q) }}" class="{{ 'on' if flt == 'all' }}">All</a>
+    <a href="{{ url_for('admin.voters', filter='face_pending', q=q) }}" class="{{ 'on' if flt == 'face_pending' }}">Face pending</a>
+    <a href="{{ url_for('admin.voters', filter='locked', q=q) }}" class="{{ 'on' if flt == 'locked' }}">Locked</a>
+    <a href="{{ url_for('admin.voters', filter='not_enrolled', q=q) }}" class="{{ 'on' if flt == 'not_enrolled' }}">Not enrolled</a>
+  </nav>
+  <form method="get" action="{{ url_for('admin.voters') }}">
+    {% if flt != 'all' %}<input type="hidden" name="filter" value="{{ flt }}">{% endif %}
+    <input class="search" type="search" name="q" value="{{ q }}" placeholder="Search name, email or student ID">
+  </form>
+</div>
+
+{% if users %}
+<div class="split">
+  <section class="panel">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Student</th><th>Program</th><th>Face</th><th>Voted</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          {% set label, kind = face_state(u) %}
+          <tr class="pick {{ 'sel' if selected and selected.id == u.id }}" data-href="{{ url_for('admin.voters', filter=flt, q=q, page=page, id=u.id) }}">
+            <td class="name">{{ u.full_name }}<small>{{ u.student_id }}</small></td>
+            <td class="nowrap">{% if u.program %}{{ u.program.code }}{% endif %}{% if u.section %} {{ u.section.code }}{% endif %}</td>
+            <td>{{ pill(kind, label) }}</td>
+            <td>{{ "Yes" if u.id in voted else "No" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pager(page, pages, "admin.voters", {"filter": flt, "q": q}, total, "student") }}
+  </section>
+
+  {% if selected %}
+  {% set label, kind = face_state(selected) %}
+  <aside class="panel detail">
+    <h2>Student</h2>
+    {% if selected.face_status == "pending" and face_record and face_record.reference_path %}
+    <div class="photo has" style="background-image:url('{{ url_for('admin.face_photo', user_id=selected.id) }}')"></div>
+    {% endif %}
+    <h3>{{ selected.full_name }}</h3>
+    <p class="meta">{{ selected.student_id }} &middot; {{ selected.email }}</p>
+    <p class="text"><b>Program</b>{% if selected.program %}{{ selected.program.name }}{% else %}-{% endif %}{% if selected.section %} &middot; {{ selected.section.code }}{% endif %}</p>
+    <p class="text"><b>Face verification</b>{{ pill(kind, label) }}</p>
+    <p class="text"><b>Email verified</b>{{ "Yes" if selected.email_verified else "No" }}</p>
+    <p class="text"><b>Has voted</b>{{ "Yes" if selected.id in voted else "No" }}</p>
+
+    {% if selected.face_status == "pending" and face_record and face_record.reference_path %}
+    <div class="actions">
+      <form method="post" action="{{ url_for('admin.reject_face', user_id=selected.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-block" type="submit">Reject</button></form>
+      <form method="post" action="{{ url_for('admin.approve_face', user_id=selected.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-block" type="submit">Approve</button></form>
+    </div>
+    {% endif %}
+
+    {% set fields %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="filter" value="{{ flt }}"><input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="id" value="{{ selected.id }}">
+    {% endset %}
+    <div class="actions {{ 'one' if not (selected.is_locked and selected.face_status != 'not_enrolled') }}">
+      {% if selected.is_locked %}
+      <form method="post" action="{{ url_for('admin.unlock_voter', user_id=selected.id) }}" data-confirm="Let {{ selected.full_name }} log in again? Check their identity first.">{{ fields }}<button class="btn btn-block" type="submit">Unlock account</button></form>
+      {% endif %}
+      {% if selected.face_status in ("enrolled", "approved", "pending") %}
+      <form method="post" action="{{ url_for('admin.reset_voter_face', user_id=selected.id) }}" data-confirm="Reset face verification? The student must set it up again.">{{ fields }}<button class="btn btn-ghost btn-block" type="submit">Reset face</button></form>
+      {% endif %}
+    </div>
+    {% if selected.is_locked %}<p class="note">Locked after too many failed face checks. Verify the student in person, unlock, then reset their face if needed.</p>{% endif %}
+  </aside>
+  {% endif %}
+</div>
+{% else %}
+<section class="panel"><div class="empty"><h3>No students found</h3>Try another filter or search.</div></section>
+{% endif %}
+{% endblock %}

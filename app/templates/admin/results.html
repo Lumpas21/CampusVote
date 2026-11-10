@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import phase_pill %}
+{% block title %}Results - CampusVote Admin{% endblock %}
+{% block page_title %}Results{% endblock %}
+{% block page_sub %}Live and final counts per position.{% endblock %}
+
+{% block body %}
+{% if election %}
+<div class="toolbar">
+  <form method="get" action="{{ url_for('admin.results') }}">
+    <select class="search" name="election" onchange="this.form.submit()" aria-label="Election" style="width:min(420px,100%)">
+      {% for e in elections %}<option value="{{ e.id }}" {{ 'selected' if e.id == election.id }}>{{ e.title }}</option>{% endfor %}
+    </select>
+  </form>
+  <div style="display:flex; gap:12px; flex-wrap:wrap">
+    <a class="btn btn-ghost btn-sm2" href="{{ url_for('admin.export_results', election_id=election.id) }}">Export CSV (Excel)</a>
+    <form class="inline" method="post" action="{{ url_for('admin.publish_results', election_id=election.id) }}"
+          data-confirm="{{ 'Hide the results from students again?' if published else 'Publish the results? Every student in scope will be able to see them.' }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-sm2 {{ 'btn-ghost' if published }}" type="submit">{{ "Unpublish results" if published else "Publish results" }}</button>
+    </form>
+  </div>
+</div>
+
+<p class="muted" style="margin:0 0 20px">{{ phase_pill(phase) }}
+  <span style="margin-left:10px">{{ voters }} student{{ '' if voters == 1 else 's' }} voted.</span>
+  <span style="margin-left:10px">{{ "Results are visible to students." if published else "Results are hidden from students until you publish them (after the election closes)." }}</span></p>
+
+{% if blocks %}
+<div class="res-grid">
+  {% for b in blocks %}
+  <section class="panel res">
+    <h3>{{ b.position.title }}</h3>
+    {% for en in b.entries %}
+    <div class="bar-row">
+      <div class="top"><span>{{ en.name }}{% if en.leading %}<span class="lead-tag">Leading</span>{% endif %}</span><span>{{ en.votes }} vote{{ '' if en.votes == 1 else 's' }}</span></div>
+      <div class="bar"><i style="width:{{ en.pct }}%"></i></div>
+    </div>
+    {% endfor %}
+    {% if not b.entries %}<p class="muted" style="margin:0 0 14px">No approved candidates for this position.</p>{% endif %}
+    <div class="bar-row">
+      <div class="top"><span>Abstain</span><span>{{ b.abstain }} vote{{ '' if b.abstain == 1 else 's' }}</span></div>
+      <div class="bar dim"><i style="width:{{ b.abstain_pct }}%"></i></div>
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<section class="panel"><div class="empty"><h3>No positions yet</h3>Add positions by editing the election.</div></section>
+{% endif %}
+
+{% else %}
+<section class="panel"><div class="empty"><h3>No published elections</h3>Results appear here once an election is published.<br><br>
+  <a class="btn btn-sm2" href="{{ url_for('admin.new_election') }}">New election</a></div></section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Ballot - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page vt-page">
+  <p class="eyebrow">{{ election.title }}</p>
+
+  <form method="post" action="{{ url_for('main.vote_review', election_id=election.id) }}" id="ballot-form" class="vt-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {% for row in ballot %}
+    {% set pos = row.position %}
+    <fieldset class="vt-step" data-title="{{ pos.title }}">
+      <legend>
+        <span class="vt-count">Position {{ loop.index }} of {{ ballot|length }}</span>
+        <span class="vt-title">{{ pos.title }}</span>
+      </legend>
+
+      <div class="vt-grid">
+        {% for c, u in row.candidates %}
+        <label class="vt-card">
+          <input type="radio" name="p{{ pos.id }}" value="{{ c.id }}" {{ "checked" if chosen.get(pos.id) == c.id }}>
+          <span class="vt-face">{{ (u.full_name or "?")[:1] }}</span>
+          <span class="vt-name">{{ u.full_name }}</span>
+          <span class="vt-party">{{ c.party_group or "Independent" }}</span>
+          <button type="button" class="vt-more" data-platform="{{ c.platform or '' }}"
+                  data-name="{{ u.full_name }}"
+                  {% if c.poster_path %}data-image="{{ url_for('main.platform_image_file', candidate_id=c.id) }}"{% endif %}>View platform</button>
+        </label>
+        {% endfor %}
+
+        <label class="vt-card vt-abstain">
+          <input type="radio" name="p{{ pos.id }}" value="abstain" {{ "checked" if pos.id in chosen and chosen[pos.id] is none }}>
+          <span class="vt-face">&ndash;</span>
+          <span class="vt-name">Abstain</span>
+          <span class="vt-party">I choose nobody for this position</span>
+        </label>
+      </div>
+      {% if not row.candidates %}<p class="muted">No approved candidates for this position.</p>{% endif %}
+    </fieldset>
+    {% endfor %}
+
+    <p class="error vt-error" id="vt-error" hidden></p>
+    <div class="vt-nav">
+      <button type="button" class="btn btn-ghost" id="vt-back">Back</button>
+      <div class="vt-dots" id="vt-dots"></div>
+      <button type="button" class="btn" id="vt-next">Next</button>
+    </div>
+  </form>
+</div>
+
+<dialog id="vt-dialog" class="lightbox vt-dialog" aria-label="Candidate platform">
+  <button type="button" class="lightbox-close" id="vt-close" aria-label="Close">&times;</button>
+  <div class="vt-dialog-body">
+    <h2 id="vt-dname"></h2>
+    <p id="vt-dtext" class="vt-dtext"></p>
+    <img id="vt-dimg" alt="Platform image" hidden>
+  </div>
+</dialog>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/vote.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import pill %}
+{% block title %}Applications - CampusVote Admin{% endblock %}
+{% block page_title %}Applications{% endblock %}
+{% block page_sub %}Review candidates before they appear to voters.{% endblock %}
+
+{% block body %}
+{% set kinds = {"pending": "warn", "approved": "ok", "rejected": "bad"} %}
+{% set labels = {"pending": "Pending", "approved": "Approved", "rejected": "Rejected"} %}
+<div class="toolbar">
+  <nav class="pills" aria-label="Filter by status">
+    <a href="{{ url_for('admin.applications') }}" class="{{ 'on' if status == 'all' }}">All <small>{{ total }}</small></a>
+    {% for key in ("pending", "approved", "rejected") %}
+    <a href="{{ url_for('admin.applications', status=key) }}" class="{{ 'on' if status == key }}">{{ labels[key] }} <small>{{ counts[key] }}</small></a>
+    {% endfor %}
+  </nav>
+</div>
+
+{% if rows %}
+<div class="split">
+  <section class="panel">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Candidate</th><th>Position</th><th>Submitted</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for c, pos, e, u in rows %}
+          <tr class="pick {{ 'sel' if selected and selected[0].id == c.id }}" data-href="{{ url_for('admin.applications', status=status, id=c.id) }}">
+            <td class="name">{{ u.full_name }}<small>{{ e.title }}</small></td>
+            <td>{{ pos.title }}</td>
+            <td class="nowrap muted">{{ c.submitted_at|local_date }}</td>
+            <td>{{ pill(kinds.get(c.status, "mute"), labels.get(c.status, c.status|title)) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% if selected %}
+  {% set c, pos, e, u = selected %}
+  <aside class="panel detail">
+    <h2>Review application</h2>
+    {% if u.profile_photo_path %}
+    <img class="application-photo" src="{{ url_for('admin.student_photo', user_id=u.id) }}" alt="Profile photo of {{ u.full_name }}">
+    {% else %}
+    <div class="photo">No profile photo</div>
+    {% endif %}
+    <h3>{{ u.full_name }}</h3>
+    <p class="meta">{{ pos.title }}{% if c.party_group %} &middot; {{ c.party_group }}{% endif %}
+      {% if u.program %} &middot; {{ u.program.code }}{% endif %}{% if u.section %} {{ u.section.code }}{% endif %}</p>
+    <p class="text"><b>Election</b>{{ e.title }}</p>
+    <p class="text"><b>Student</b>{{ u.student_id }} &middot; {{ u.email }}</p>
+    <p class="text"><b>Platform</b>{{ c.platform or "-" }}</p>
+    {% if c.poster_path %}
+    <p class="text"><b>Platform image</b>
+      <a href="{{ url_for('admin.application_platform_image', candidate_id=c.id) }}" target="_blank" rel="noopener">
+        <img class="plat-img" src="{{ url_for('admin.application_platform_image', candidate_id=c.id) }}" alt="Platform image submitted by the applicant">
+      </a>
+      <small class="muted">Click the image to open it full size.</small>
+    </p>
+    {% endif %}
+    <p class="text"><b>Why running</b>{{ c.reason or "-" }}</p>
+
+    {% if c.status == "pending" %}
+    <form method="post" action="{{ url_for('admin.review_application', candidate_id=c.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="status" value="{{ status }}">
+      <div class="field" style="margin-bottom:0">
+        <label for="reason">Reason (required if rejecting)</label>
+        <textarea id="reason" name="reason" maxlength="1000" style="min-height:90px"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" type="submit" name="decision" value="reject">Reject</button>
+        <button class="btn" type="submit" name="decision" value="approve">Approve</button>
+      </div>
+    </form>
+    {% else %}
+    <p class="text"><b>Decision</b>{{ pill(kinds.get(c.status, "mute"), labels.get(c.status, c.status|title)) }}</p>
+    {% if c.reject_reason %}<p class="text"><b>Reason given</b>{{ c.reject_reason }}</p>{% endif %}
+    {% endif %}
+  </aside>
+  {% endif %}
+</div>
+{% else %}
+<section class="panel"><div class="empty"><h3>No applications here</h3>
+  {% if status == "all" %}When students apply as officer, they will show up in this list.{% else %}Nothing has this status right now.{% endif %}</div></section>
+{% endif %}
+{% endblock %}

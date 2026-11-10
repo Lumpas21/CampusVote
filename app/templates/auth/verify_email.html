@@ -1,0 +1,116 @@
+{% extends "auth_base.html" %}
+{% block title %}Verify email - CampusVote{% endblock %}
+
+{% block card %}
+<div class="otp-center">
+  <div class="eyebrow">Step 2 of 3</div>
+  <h1>Verify your email</h1>
+  {% if email_mode %}
+  <p class="subtitle">We sent a 6-digit code to <strong>{{ masked_email }}</strong>. Enter it below.</p>
+  <p class="hint" style="margin:-8px 0 6px">Check your school inbox &mdash; and the Spam/Junk folder. The code expires in {{ expiry_minutes }} minute{{ '' if expiry_minutes == 1 else 's' }}.</p>
+  {% else %}
+  <p class="subtitle">Enter the 6-digit code for <strong>{{ masked_email }}</strong>.</p>
+  {% endif %}
+
+  <form method="post" id="otp-form" novalidate>
+    {{ form.hidden_tag() }}
+    <input type="hidden" name="code" id="code">
+    <div class="otp-row" id="otp-row">
+      {% for i in range(6) %}
+      <input class="otp-box" type="text" inputmode="numeric" autocomplete="{{ 'one-time-code' if i == 0 else 'off' }}"
+             maxlength="1" aria-label="Digit {{ i + 1 }}" {{ 'autofocus' if i == 0 }}>
+      {% endfor %}
+    </div>
+    {% for e in form.code.errors %}<span class="error" style="margin:-8px 0 12px">{{ e }}</span>{% endfor %}
+
+    <div style="margin-bottom:22px">
+      <span class="timer" id="timer" data-seconds="{{ expires_in }}">Code expires in --:--</span>
+    </div>
+
+    <button class="btn btn-block" type="submit" id="verify-btn">Verify email</button>
+  </form>
+
+  <div class="otp-links">
+    <form method="post" action="{{ url_for('auth.resend_code') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      Did not get it?
+      <button class="text-btn" id="resend-btn" data-wait="{{ resend_in }}" type="submit">Resend code</button>
+      <span id="resend-note"></span>
+    </form>
+    <form method="post" action="{{ url_for('auth.change_email') }}"
+          onsubmit="return confirm('This removes your unverified account so you can register again. Continue?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      Wrong email? <button class="text-btn" type="submit">Change email</button>
+    </form>
+  </div>
+
+  {% if dev_code %}
+  <div class="dev-box">
+    DEVELOPMENT ONLY (OTP_DELIVERY=console) &middot; your code is <b>{{ dev_code }}</b><br>
+    No email was sent. Set OTP_DELIVERY=smtp in .env so students receive it in their school inbox.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    // ---- 6 boxes -------------------------------------------------------
+    var boxes = Array.prototype.slice.call(document.querySelectorAll(".otp-box"));
+    var hidden = document.getElementById("code");
+    var form = document.getElementById("otp-form");
+
+    function join() { hidden.value = boxes.map(function (b) { return b.value; }).join(""); }
+
+    boxes.forEach(function (box, i) {
+      box.addEventListener("input", function () {
+        box.value = box.value.replace(/\D/g, "").slice(0, 1);
+        if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+        join();
+      });
+      box.addEventListener("keydown", function (e) {
+        if (e.key === "Backspace" && !box.value && i > 0) { boxes[i - 1].focus(); }
+        if (e.key === "ArrowLeft" && i > 0) boxes[i - 1].focus();
+        if (e.key === "ArrowRight" && i < boxes.length - 1) boxes[i + 1].focus();
+      });
+      box.addEventListener("paste", function (e) {
+        var text = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 6);
+        if (!text) return;
+        e.preventDefault();
+        text.split("").forEach(function (ch, k) { boxes[k].value = ch; });
+        boxes[Math.min(text.length, 5)].focus();
+        join();
+      });
+    });
+    form.addEventListener("submit", join);
+
+    // ---- expiry countdown ----------------------------------------------
+    var timer = document.getElementById("timer");
+    var verifyBtn = document.getElementById("verify-btn");
+    var left = parseInt(timer.dataset.seconds, 10) || 0;
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function tick() {
+      if (left <= 0) {
+        timer.textContent = "Code expired. Request a new one.";
+        timer.classList.add("expired");
+        verifyBtn.disabled = true; verifyBtn.classList.add("disabled");
+        return false;
+      }
+      timer.textContent = "Code expires in " + pad(Math.floor(left / 60)) + ":" + pad(left % 60);
+      left -= 1; return true;
+    }
+    if (tick()) { var t = setInterval(function () { if (!tick()) clearInterval(t); }, 1000); }
+
+    // ---- resend cooldown -----------------------------------------------
+    var rb = document.getElementById("resend-btn");
+    var note = document.getElementById("resend-note");
+    var wait = parseInt(rb.dataset.wait, 10) || 0;
+    function rtick() {
+      if (wait <= 0) { rb.disabled = false; note.textContent = ""; return false; }
+      rb.disabled = true; note.textContent = "in " + wait + "s"; wait -= 1; return true;
+    }
+    if (rtick()) { var r = setInterval(function () { if (!rtick()) clearInterval(r); }, 1000); }
+  })();
+</script>
+{% endblock %}

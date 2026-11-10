@@ -1,0 +1,68 @@
+{% extends "auth_base.html" %}
+{% block title %}Face check - CampusVote{% endblock %}
+
+{% block card %}
+<div class="otp-center">
+  <div class="eyebrow">Secure voting</div>
+  {% if not enrolled %}
+    <h1>Set up face verification first</h1>
+    <p class="subtitle">We need your saved face data before we can check it is really you.</p>
+    <a class="btn btn-block" href="{{ url_for('auth.face_setup') }}">Set up face verification</a>
+  {% else %}
+    <h1>Verify your face</h1>
+    <p class="subtitle">Look straight at the camera, in good light. This confirms that you are the account owner.</p>
+
+    <div class="cam" style="margin:0 auto 18px;max-width:360px">
+      <div class="oval" id="oval">
+        <video id="video" autoplay playsinline muted></video>
+        <span class="ph" id="ph">Starting camera&hellip;</span>
+      </div>
+      <span class="pill" id="pill">Starting camera&hellip;</span>
+    </div>
+
+    <button class="btn btn-block" type="button" id="go" disabled>Verify my face</button>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if enrolled %}
+<script src="{{ url_for('static', filename='js/face-camera.js') }}"></script>
+<script>
+(function () {
+  var video = document.getElementById("video"), oval = document.getElementById("oval");
+  var ph = document.getElementById("ph"), pill = document.getElementById("pill");
+  var go = document.getElementById("go"), csrf = "{{ csrf_token() }}";
+  var nextUrl = {{ next_url|tojson }}, method = {{ target_method|tojson }};
+  var ready = false;
+
+  function say(t, k) { pill.textContent = t; pill.className = "pill" + (k ? " " + k : ""); }
+
+  FaceCam.start(video).then(function () {
+    ready = true; ph.hidden = true; oval.classList.add("live");
+    go.disabled = false; say("Camera ready");
+  }).catch(function (e) { ph.textContent = "Camera unavailable"; say(e.message, "err"); });
+
+  go.addEventListener("click", async function () {
+    go.disabled = true;
+    for (var n = 3; n >= 1; n--) { say("Look straight \u00b7 " + n); await FaceCam.sleep(1000); }
+    var shot = FaceCam.snap(video);
+    oval.classList.add("flash"); setTimeout(function () { oval.classList.remove("flash"); }, 300);
+    say("Checking\u2026");
+    FaceCam.postJSON("{{ url_for('auth.face_check') }}", { frame: shot, next: nextUrl, method: method }, csrf)
+      .then(function (r) {
+        if (r.data && r.data.ok) {
+          say("Verified", "ok"); oval.classList.add("okring"); FaceCam.stop(video);
+          window.location.href = r.data.redirect; return;
+        }
+        if (r.data && r.data.redirect) { window.location.href = r.data.redirect; return; }
+        say((r.data && r.data.message) || "Verification failed. Try again.", "err");
+        go.textContent = "Try again"; go.disabled = false;
+      })
+      .catch(function () { say("Could not reach the server.", "err"); go.disabled = false; });
+  });
+  window.addEventListener("pagehide", function () { FaceCam.stop(video); });
+})();
+</script>
+{% endif %}
+{% endblock %}

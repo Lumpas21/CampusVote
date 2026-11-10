@@ -1,0 +1,38 @@
+{% extends "auth_base.html" %}
+{% block title %}Log in - CampusVote{% endblock %}
+{% block card_class %}{% endblock %}
+
+{% block card %}
+<div class="eyebrow">Welcome back</div>
+<h1>Log in</h1>
+<p class="subtitle">Log in with your school email.</p>
+
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="field">
+    <label for="email">School email</label>
+    {{ form.email(placeholder="name@ssct.edu.ph", autocomplete="username") }}
+    {% for e in form.email.errors %}<span class="error">{{ e }}</span>{% endfor %}
+  </div>
+
+  <div class="field">
+    <label for="password">Password</label>
+    <div class="pw">
+      {{ form.password(placeholder="Enter your password", autocomplete="current-password") }}
+      <button class="eye" type="button" data-eye="password" aria-label="Show password" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg>
+      </button>
+    </div>
+    {% for e in form.password.errors %}<span class="error">{{ e }}</span>{% endfor %}
+  </div>
+
+  <div class="row-between" style="justify-content:flex-end">
+    <a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
+  </div>
+
+  <button class="btn btn-block" type="submit">Login</button>
+</form>
+
+<p class="below-form">Not a user? <a href="{{ url_for('auth.register') }}">Register now</a></p>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Cast your vote - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="stack page-card vt-center">
+    <section class="card">
+      <p class="eyebrow">Identity verified</p>
+      <h2>Ready to cast your vote</h2>
+      <p class="muted">{{ election.title }}. Once you press the button your vote is final and cannot be changed.</p>
+      <form method="post" action="{{ url_for('main.vote_cast', election_id=election.id) }}" class="btn-row" style="justify-content:center">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">Cast my vote</button>
+        <a class="btn btn-ghost" href="{{ url_for('main.vote_review', election_id=election.id) }}">Back to review</a>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

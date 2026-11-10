@@ -1,0 +1,104 @@
+{% extends "admin/base.html" %}
+{% from "admin/_ui.html" import pill %}
+{% block title %}Settings - CampusVote Admin{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_sub %}Lists, rules and admin accounts.{% endblock %}
+
+{% block body %}
+<div class="cols-3">
+  <section class="panel">
+    <h2>Colleges and programs</h2>
+    <p class="sub">Used in registration and election scope.</p>
+    {% for c, programs in colleges %}
+    <div class="group"><h4>{{ c.code }} &middot; {{ c.name }}</h4>
+      <div class="chips">{% for p in programs %}<span class="chip2">{{ p.code }}</span>{% else %}<span class="muted">No programs yet</span>{% endfor %}</div></div>
+    {% endfor %}
+    <details class="add-form"><summary>+ Add college</summary>
+      <form method="post" action="{{ url_for('admin.add_college') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="code" placeholder="Code (CCIS)" maxlength="20" required>
+        <input type="text" name="name" placeholder="Full name" maxlength="150" required>
+        <button class="btn btn-sm2" type="submit">Add college</button>
+      </form></details>
+    <details class="add-form"><summary>+ Add program</summary>
+      <form method="post" action="{{ url_for('admin.add_program') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select name="college_id" required><option value="" disabled selected>College</option>
+          {% for c, _ in colleges %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}</select>
+        <input type="text" name="code" placeholder="Code (BSCS)" maxlength="30" required>
+        <input type="text" name="name" placeholder="Bachelor of Science in ..." maxlength="200" required>
+        <button class="btn btn-sm2" type="submit">Add program</button>
+      </form></details>
+  </section>
+
+  <section class="panel">
+    <h2>Year levels and sections</h2>
+    <p class="sub">Used in registration and classroom elections.</p>
+    {% for y, sections in years %}
+    <div class="group"><h4>{{ y.name }}</h4>
+      <div class="chips">{% for s in sections %}<span class="chip2">{{ s.code }}</span>{% else %}<span class="muted">No sections yet</span>{% endfor %}</div></div>
+    {% endfor %}
+    <details class="add-form"><summary>+ Add section</summary>
+      <form method="post" action="{{ url_for('admin.add_section') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select name="year_level_id" required><option value="" disabled selected>Year level</option>
+          {% for y, _ in years %}<option value="{{ y.id }}">{{ y.name }}</option>{% endfor %}</select>
+        <input type="text" name="code" placeholder="Section (3C)" maxlength="10" required>
+        <button class="btn btn-sm2" type="submit">Add section</button>
+      </form></details>
+  </section>
+
+  <section class="panel">
+    <h2>Security rules</h2>
+    <p class="sub">Applies to student sign-in and verification.</p>
+    <form method="post" action="{{ url_for('admin.save_security') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="otp_expiry_minutes">OTP expiry (minutes)</label>
+        <input type="number" id="otp_expiry_minutes" name="otp_expiry_minutes" min="1" max="30" value="{{ otp_minutes }}">
+        {% if otp_env_override %}<span class="field-note">Your .env sets OTP_EXPIRY_MINUTES={{ otp_env_override }}, which takes priority over this value.</span>{% endif %}</div>
+      <div class="field"><label for="face_check_attempts">Face check attempts</label>
+        <input type="number" id="face_check_attempts" name="face_check_attempts" min="1" max="10" value="{{ face_attempts }}"></div>
+      <button class="btn btn-sm2" type="submit">Save settings</button>
+    </form>
+  </section>
+</div>
+
+<section class="panel" style="margin-top:24px">
+  <h2>Admin accounts</h2>
+  <p class="sub">Only super admins can see this page and manage admins.</p>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in admins %}
+        <tr>
+          <td class="name">{{ a.full_name }}{% if a.id == current_user.id %} <small>You</small>{% endif %}</td>
+          <td>{{ a.email }}</td>
+          <td>{{ "Super admin" if a.admin_role == "super_admin" else "Department admin" }}</td>
+          <td>{{ pill("bad", "Deactivated") if a.is_locked else pill("ok", "Active") }}</td>
+          <td class="nowrap">
+            {% if a.id != current_user.id %}
+            <form class="inline" method="post" action="{{ url_for('admin.toggle_admin', user_id=a.id) }}"
+                  data-confirm="{{ 'Reactivate' if a.is_locked else 'Deactivate' }} {{ a.full_name }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="link {{ '' if a.is_locked else 'danger' }}" type="submit">{{ "Reactivate" if a.is_locked else "Deactivate" }}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <details class="add-form" style="max-width:420px"><summary>+ Add admin</summary>
+    <form method="post" action="{{ url_for('admin.add_admin') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="full_name" placeholder="Full name" maxlength="150" required>
+      <input type="email" name="email" placeholder="Email" maxlength="150" required>
+      <select name="admin_role" required><option value="department_admin">Department admin</option><option value="super_admin">Super admin</option></select>
+      <input type="password" name="password" placeholder="Temporary password (10+ characters)" minlength="10" autocomplete="new-password" required>
+      <button class="btn btn-sm2" type="submit">Create admin</button>
+    </form>
+  </details>
+</section>
+{% endblock %}

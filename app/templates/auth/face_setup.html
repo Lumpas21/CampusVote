@@ -1,0 +1,138 @@
+{% extends "auth_base.html" %}
+{% block title %}Face setup - CampusVote{% endblock %}
+{% block card_class %}wide{% endblock %}
+
+{% block card %}
+<div class="eyebrow">Step 3 of 3</div>
+<h1>Set up face verification</h1>
+<p class="subtitle">This lets us confirm that only you can vote with your account.</p>
+
+<div class="face-grid">
+  <div class="cam">
+    <div class="oval" id="oval">
+      <video id="video" autoplay playsinline muted></video>
+      <span class="ph" id="ph">Starting camera&hellip;</span>
+    </div>
+    <span class="pill" id="pill">Starting camera&hellip;</span>
+  </div>
+
+  <div>
+    <div class="tips-title">Before you start</div>
+    <ul class="tips">
+      <li>Find a well-lit place</li>
+      <li>Remove your cap, mask or sunglasses</li>
+      <li>Keep your face inside the oval</li>
+      <li>Blink, then slowly turn left and right</li>
+    </ul>
+
+    <div class="chips">
+      <span class="chip" id="chip-0">Center</span>
+      <span class="chip" id="chip-1">Left</span>
+      <span class="chip" id="chip-2">Right</span>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" id="consent">
+      <span>I consent to CampusVote using my face data only to verify my identity when voting. It is never shown on my ballot.</span>
+    </label>
+
+    <div class="btn-row">
+      <button class="btn" type="button" id="start" disabled>Start scan</button>
+      <button class="btn btn-ghost" type="button" id="retake" disabled>Retake</button>
+      <button class="btn" type="button" id="save" disabled>Save face data</button>
+    </div>
+    <p class="hint" style="margin-top:18px" id="hint">
+      Press <b>Start scan</b>. You will be asked to look straight, then turn left, then turn right
+      &mdash; a photo is taken automatically after each countdown.
+    </p>
+    <p style="margin-top:10px"><a href="{{ url_for('main.dashboard') }}">Skip for now &rarr;</a></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/face-camera.js') }}"></script>
+<script>
+(function () {
+  var POSES = [
+    { label: "Look straight",                    chip: "chip-0" },
+    { label: "Slowly turn your head left",       chip: "chip-1" },
+    { label: "Slowly turn your head right",      chip: "chip-2" }
+  ];
+  var video = document.getElementById("video"), oval = document.getElementById("oval");
+  var ph = document.getElementById("ph"), pill = document.getElementById("pill");
+  var startBtn = document.getElementById("start"), retakeBtn = document.getElementById("retake");
+  var saveBtn = document.getElementById("save"), consent = document.getElementById("consent");
+  var csrf = "{{ csrf_token() }}";
+  var frames = [], busy = false, cameraOn = false;
+
+  function say(text, kind) {
+    pill.textContent = text;
+    pill.className = "pill" + (kind ? " " + kind : "");
+  }
+  function refresh() {
+    startBtn.disabled = busy || !cameraOn || frames.length === POSES.length;
+    retakeBtn.disabled = busy || frames.length === 0;
+    saveBtn.disabled = busy || frames.length !== POSES.length || !consent.checked;
+  }
+  function resetChips() {
+    POSES.forEach(function (p) { document.getElementById(p.chip).className = "chip"; });
+  }
+
+  FaceCam.start(video).then(function () {
+    cameraOn = true; ph.hidden = true; oval.classList.add("live");
+    say("Camera ready"); refresh();
+  }).catch(function (err) {
+    ph.textContent = "Camera unavailable"; say(err.message, "err");
+  });
+
+  startBtn.addEventListener("click", async function () {
+    busy = true; frames = []; resetChips(); refresh();
+    for (var i = 0; i < POSES.length; i++) {
+      var chip = document.getElementById(POSES[i].chip);
+      chip.className = "chip active";
+      for (var n = 3; n >= 1; n--) {
+        say(POSES[i].label + " \u00b7 " + n);
+        await FaceCam.sleep(1000);
+      }
+      var shot = FaceCam.snap(video);
+      if (!shot) { say("The camera is not ready. Try again.", "err"); busy = false; frames = []; resetChips(); refresh(); return; }
+      frames.push(shot);
+      oval.classList.add("flash"); setTimeout(function () { oval.classList.remove("flash"); }, 300);
+      chip.className = "chip done";
+    }
+    busy = false; say("Scan complete", "ok");
+    document.getElementById("hint").textContent = consent.checked
+      ? "Looks good. Press Save face data." : "Tick the consent box, then press Save face data.";
+    refresh();
+  });
+
+  retakeBtn.addEventListener("click", function () {
+    frames = []; resetChips(); say("Camera ready");
+    oval.classList.remove("okring"); refresh();
+  });
+  consent.addEventListener("change", refresh);
+
+  saveBtn.addEventListener("click", function () {
+    busy = true; refresh(); say("Checking your face\u2026 (first time can take a minute)");
+    FaceCam.postJSON("{{ url_for('auth.face_setup_save') }}", { frames: frames, consent: consent.checked }, csrf)
+      .then(function (r) {
+        busy = false;
+        if (r.data && r.data.ok) {
+          say("Face data saved", "ok"); oval.classList.add("okring");
+          FaceCam.stop(video);
+          window.location.href = r.data.redirect;
+          return;
+        }
+        say((r.data && r.data.message) || "Something went wrong. Please try again.", "err");
+        frames = []; resetChips(); refresh();
+      })
+      .catch(function () {
+        busy = false; say("Could not reach the server. Try again.", "err"); frames = []; resetChips(); refresh();
+      });
+  });
+
+  window.addEventListener("pagehide", function () { FaceCam.stop(video); });
+})();
+</script>
+{% endblock %}

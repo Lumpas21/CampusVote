@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Review your ballot - CampusVote{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <p class="eyebrow">Review</p>
+  <h1>Review your ballot</h1>
+  <p class="subtitle">{{ election.title }}. Check your choices. After you confirm, we verify your face once more and then your vote is final.</p>
+
+  <div class="stack page-card">
+    <section class="card">
+      <table class="vt-table">
+        <thead><tr><th>Position</th><th>Your choice</th></tr></thead>
+        <tbody>
+        {% for row in summary %}
+          <tr>
+            <td>{{ row.position.title }}</td>
+            <td>{% if row.candidate %}<b>{{ row.candidate[1].full_name }}</b>
+                  <span class="muted">{{ row.candidate[0].party_group or "Independent" }}</span>
+                {% else %}<span class="muted">Abstain</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    <div class="btn-row">
+      <a class="btn" href="{{ url_for('main.vote_submit', election_id=election.id) }}">Confirm and verify my face</a>
+      <a class="btn btn-ghost" href="{{ url_for('main.vote_ballot', election_id=election.id) }}">Change my choices</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

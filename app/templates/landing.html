@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}CampusVote - Your Campus, Your Voice{% endblock %}
+
+{% block head %}
+<style>
+  /* message after logging out floats as a small toast */
+  .flashes { position: fixed; top: 84px; left: 50%; transform: translateX(-50%); z-index: 30; margin: 0; width: min(420px, 100% - 32px); transition: opacity .4s; }
+  .flashes.fade { opacity: 0; }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class="hero-wrap">
+  <div class="wrap">
+    <header class="site-header hero-header">
+      <a class="brand" href="#top" data-go="top">CampusVote</a>
+      <nav class="nav">
+        <a href="#about" data-go="about">About</a>
+        <a href="#how" data-go="how">How it works</a>
+        <a href="#contact" data-go="contact">Contact</a>
+        <a class="btn btn-sm" href="{{ url_for('auth.login') }}">Login</a>
+      </nav>
+    </header>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="hero screen" id="top">
+  <div class="hero-grid">
+    <div class="hero-logo">
+      <div class="hero-logo-circle">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SNSU Campus Vote logo">
+      </div>
+    </div>
+    <div class="hero-text">
+      <div class="tag">Your Campus, Your Voice</div>
+      <div class="big">CampusVote</div>
+      <div class="actions">
+        <a class="btn" href="{{ url_for('auth.register') }}">REGISTER</a>
+        <a class="btn btn-dark" href="#features" data-go="features">READ MORE</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section screen" id="features">
+  <div class="wrap side">
+    <div class="vtitle">Features</div>
+    <div class="vline">
+      <ul class="features">
+        {% set items = [
+          ('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', 'Secured by student ID verification'),
+          ('<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>', 'One vote per account, enforced automatically'),
+          ('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>', 'Email OTP verification confirms it is really you'),
+          ('<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/>', 'Face verification so nobody can vote for you'),
+          ('<path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>', 'Real-time, automated result tallying'),
+          ('<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>', 'Vote from any device: phone, tablet or laptop'),
+          ('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', 'Faster than paper ballots, with results in minutes'),
+        ] %}
+        {% for svg, text in items %}
+        <li><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">{{ svg|safe }}</svg></span>{{ text }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section screen" id="about">
+  <div class="wrap side">
+    <div class="vtitle">About</div>
+    <div class="vline">
+      <p class="about-text">
+        CampusVote is an online voting system built for SNSU student organizations and classrooms.
+        It replaces manual, paper-based elections with a faster, more reliable process, from candidate
+        registration to real-time result tallying. Every enrolled student can vote securely from any
+        device, without the long lines, printed ballots, or manual counting that slow down traditional
+        campus elections. Voting runs within a set schedule, from the opening to the closing of the polls,
+        so students can cast their vote anytime within that window, even in between classes.
+        CampusVote makes student-led elections easier to run, easier to trust, and easier to take part in.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section how screen" id="how">
+  <div class="wrap">
+    <h2>How CampusVote Works</h2>
+    <p class="lead">Vote in four simple steps. No lines, no paper ballots.</p>
+    <div class="how-grid">
+      <div class="how-card"><div class="num">01</div><h3>Register</h3><p>Create your account with your student ID and school email.</p></div>
+      <div class="how-card"><div class="num">02</div><h3>Verify</h3><p>Log in and confirm your identity on your profile page.</p></div>
+      <div class="how-card"><div class="num">03</div><h3>Choose</h3><p>Browse open elections, read the rules and review candidates.</p></div>
+      <div class="how-card"><div class="num">04</div><h3>Vote</h3><p>Submit your ballot and keep your receipt as proof.</p></div>
+    </div>
+    <div class="cta"><a class="btn" href="{{ url_for('auth.register') }}">Get Started</a></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block footer %}
+<footer class="site-footer screen" id="contact">
+  <div class="wrap footer-grid">
+    <div>
+      <a class="brand" href="{{ url_for('main.index') }}">CampusVote</a>
+      <p>Student Council Office<br>SNSU, Surigao City<br>campusvote@ssct.edu.ph</p>
+    </div>
+    <div>
+      <h4>Quick links</h4>
+      <ul>
+        <li><a href="#about" data-go="about">About</a></li>
+        <li><a href="#how" data-go="how">How it works</a></li>
+        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Follow us</h4>
+      <div class="social">
+        <a href="https://www.facebook.com/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-8h2.7l.5-3.2h-3.2V7.9c0-.9.4-1.7 1.8-1.7h1.5V3.4S15.5 3.2 14.3 3.2c-2.6 0-4.1 1.5-4.1 4.3v2.3H7.5V13h2.7v8z"/></svg>
+        </a>
+        <a href="https://www.youtube.com/" target="_blank" rel="noopener" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div>
+      <h4>Send feedback</h4>
+      <form method="post" action="{{ url_for('main.feedback') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="message" maxlength="1000" placeholder="Write your message" required></textarea>
+        <button class="btn" type="submit">Send</button>
+      </form>
+      <p class="hint-sm">You need an account to send feedback.</p>
+    </div>
+  </div>
+</footer>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/deck.js') }}"></script>
+{% endblock %}
