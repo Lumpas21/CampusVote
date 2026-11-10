@@ -1,0 +1,133 @@
+/* Student pages: profile photo, settings, apply, contact. Loaded after style.css. */
+
+/* nav: Vote Now is an outline button, not a loud solid one */
+.nav .btn.btn-outline { background: transparent; color: var(--amber); border: 1.5px solid var(--amber); padding: 9px 18px; }
+.nav .btn.btn-outline:hover { background: rgba(245, 166, 35, .12); filter: none; }
+.nav { flex-wrap: wrap; }
+
+/* page shell */
+.page { padding: 44px 0 72px; }
+.page > h1 { font-size: 2.4rem; margin-bottom: 8px; }
+.page-card { max-width: 900px; margin-left: auto; margin-right: auto; }
+.page:has(.page-card) > h1, .page:has(.page-card) > .subtitle { max-width: 900px; margin-left: auto; margin-right: auto; }
+.stack { display: grid; gap: 22px; }
+.stack.page-card { margin-top: 0; }
+/* apply form: short fields side by side on wide screens */
+#apply-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+#apply-form > .field:has(textarea), #apply-form > .rules, #apply-form > .check, #apply-form > .btn-row, #apply-form > .error, #apply-form > .field:has(#election_id) { grid-column: 1 / -1; }
+@media (max-width: 700px) { #apply-form { grid-template-columns: 1fr; } }
+.page .card h2 { font-size: 1.5rem; margin-bottom: 6px; }
+
+/* profile photo */
+.avatar.has-photo { background-color: var(--card); background-size: cover; background-position: center; background-repeat: no-repeat; }
+.avatar.has-photo::before, .avatar.has-photo::after { display: none; }
+.profile-verification-link { margin-left: 10px; font-size: .9rem; }
+
+dialog.reminder { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 16px; padding: 28px; width: min(480px, 100% - 32px); }
+dialog.reminder::backdrop { background: rgba(0, 0, 0, .65); }
+dialog.reminder h3 { font-size: 1.5rem; margin-bottom: 8px; }
+dialog.reminder ul { margin: 14px 0 20px; padding-left: 20px; color: var(--muted); line-height: 1.8; }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* applications */
+.app-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.app-list li { background: var(--input); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.app-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.app-meta { color: var(--muted); font-size: .85rem; margin-top: 2px; }
+.app-why { margin-top: 8px; color: var(--danger); font-size: .85rem; }
+.inline-form { display: inline; margin: 8px 0 0; }
+.inline-form .text-btn { margin-top: 8px; }
+.rules { background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; color: var(--muted); font-size: .9rem; margin: -6px 0 18px; white-space: pre-line; }
+.todo-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.todo-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.btn.btn-sm { padding: 9px 16px; font-size: .9rem; }
+.page textarea, .card textarea { width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 1rem var(--sans); resize: vertical; min-height: 120px; }
+.field input[type=number], .field input[type=search], .field input[type=file] { width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 1rem var(--sans); }
+
+/* settings */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; margin-top: 20px; }
+.page .subtitle { margin-bottom: 18px; }
+
+/* contact */
+.contact-split { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; margin-top: 8px; }
+.contact-list { margin: 0; display: grid; gap: 16px; }
+.contact-list dt { color: var(--muted); font-size: .85rem; margin-bottom: 2px; }
+.contact-list dd { margin: 0; font-size: 1.05rem; }
+.when-list { margin: 10px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.8; }
+
+@media (max-width: 860px) {
+  .settings-grid, .contact-split { grid-template-columns: 1fr; }
+}
+
+/* apply: platform text (left) + platform image (right) */
+.pf-split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+.pf-text, .pf-image { display: flex; flex-direction: column; min-width: 0; }
+.pf-text textarea { height: 230px; min-height: 230px; max-height: 230px; resize: none; overflow-y: auto; }
+.counter { margin-top: 6px; font-size: .82rem; color: var(--muted); }
+.counter.ok { color: var(--ok); }
+.pf-drop { height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--input); color: var(--text); border: 1.5px dashed #3b5a4a; border-radius: 12px; cursor: pointer; font: inherit; padding: 16px; text-align: center; }
+.pf-drop:hover { border-color: var(--amber); background: #0f1d16; }
+.pf-drop svg { width: 34px; height: 34px; fill: none; stroke: var(--amber); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pf-drop small { color: var(--muted); }
+.pf-preview[hidden], .pf-drop[hidden] { display: none; }
+.pf-thumb { display: block; width: 100%; height: 230px; padding: 0; background: var(--input); border: 1px solid var(--line); border-radius: 12px; cursor: zoom-in; overflow: hidden; }
+.pf-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pf-actions { display: flex; gap: 14px; align-items: center; margin-top: 6px; font-size: .85rem; }
+.pf-actions .muted { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+dialog.lightbox { background: transparent; border: 0; padding: 0; max-width: 96vw; max-height: 96vh; overflow: visible; }
+dialog.lightbox::backdrop { background: rgba(0, 0, 0, .85); }
+dialog.lightbox img { display: block; max-width: 94vw; max-height: 92vh; border-radius: 10px; background: #fff; }
+.lightbox-close { position: absolute; top: -14px; right: -14px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--amber); color: #1a1204; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+@media (max-width: 700px) { .pf-split { grid-template-columns: 1fr; } }
+
+/* ---------- voting ---------- */
+.btn.btn-ghost, a.btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn.btn-ghost:hover, a.btn-ghost:hover { border-color: var(--amber); color: var(--amber); filter: none; }
+.vt-steps { margin: 6px 0 14px 20px; padding: 0; display: grid; gap: 8px; }
+.vt-note { margin-top: 10px; }
+.vt-rules { white-space: pre-line; background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; color: var(--muted); max-height: 220px; overflow-y: auto; }
+.vt-center { text-align: center; max-width: 640px; }
+.vt-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.vt-step legend { padding: 0; margin-bottom: 18px; display: grid; gap: 4px; }
+.vt-count { color: var(--muted); font-size: .9rem; }
+.vt-title { font-family: var(--serif); font-size: 2.2rem; color: var(--text); }
+.vt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.vt-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 20px 14px; background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; cursor: pointer; }
+.vt-card:hover { border-color: #3b5a4a; }
+.vt-card input { position: absolute; opacity: 0; pointer-events: none; }
+.vt-card:has(input:checked) { border-color: var(--amber); background: #1a2616; box-shadow: 0 0 0 1px var(--amber) inset; }
+.vt-card:has(input:focus-visible) { outline: 2px solid var(--amber); outline-offset: 2px; }
+.vt-face { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--input); border: 1px solid var(--line); color: var(--amber); font: 700 1.5rem var(--serif); }
+.vt-card:has(input:checked) .vt-face { background: var(--amber); color: #1a1204; border-color: var(--amber); }
+.vt-name { font-weight: 600; }
+.vt-party { color: var(--muted); font-size: .88rem; }
+.vt-more { margin-top: 4px; background: none; border: 0; color: var(--amber); font: inherit; font-size: .88rem; cursor: pointer; text-decoration: underline; }
+.vt-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; }
+.vt-dots { display: flex; gap: 8px; }
+.vt-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.vt-dots .done { background: #3b7a55; }
+.vt-dots .now { background: var(--amber); }
+.vt-error { margin-top: 14px; }
+.vt-dialog { max-width: min(560px, 94vw); }
+.vt-dialog-body { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; max-height: 86vh; overflow-y: auto; }
+.vt-dialog-body h2 { margin: 0 0 10px; }
+.vt-dtext { white-space: pre-wrap; color: var(--text); }
+.vt-dialog-body img { max-width: 100%; border-radius: 10px; margin-top: 12px; }
+.vt-table { width: 100%; border-collapse: collapse; }
+.vt-table th, .vt-table td { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--line); }
+.vt-table th { color: var(--muted); font-weight: 500; font-size: .9rem; }
+.vt-code { font: 700 2rem ui-monospace, Consolas, monospace; letter-spacing: .06em; color: var(--amber); margin: 18px 0 6px; word-break: break-all; }
+.vt-results { display: grid; gap: 14px; }
+.vt-res-top { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.vt-bar { height: 10px; background: var(--input); border-radius: 6px; overflow: hidden; }
+.vt-bar span { display: block; height: 100%; background: #3b7a55; }
+.vt-res.lead .vt-bar span { background: var(--amber); }
+@media print {
+  body * { visibility: hidden; }
+  #receipt, #receipt * { visibility: visible; }
+  #receipt { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; background: #fff; color: #000; }
+  #receipt .btn-row { display: none; }
+  .vt-code { color: #000; }
+}
+dialog.lightbox.vt-dialog { width: min(560px, 94vw); }
+.vt-dialog-body img[hidden], dialog.lightbox img[hidden] { display: none; }
